@@ -1,0 +1,3692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LRL Contractors / Visitors Register</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #f0f5e8;
+    --surface: #ffffff;
+    --border: #C0DD97;
+    --accent: #639922;
+    --accent2: #e05c3a;
+    --text: #27500A;
+    --muted: #5F5E5A;
+    --green: #639922;
+    --red: #c0392b;
+    --radius: 8px;
+    --dark: #27500A;
+    --light-green: #97C459;
+    --pale: #F8FAF4;
+    --pale2: #EAF3DE;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--dark);
+    border-bottom: 3px solid var(--light-green);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  header h1 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--light-green);
+  }
+
+  header h1 span { color: rgba(255,255,255,0.7); }
+
+  .onsite-badge {
+    background: var(--pale2);
+    color: var(--dark);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.08em;
+    border: 1px solid var(--border);
+  }
+
+  .onsite-badge.fire {
+    background: var(--accent2);
+    color: #fff;
+    border-color: var(--accent2);
+    animation: pulse 1s ease-in-out infinite;
+    cursor: pointer;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.85; transform: scale(1.04); }
+  }
+
+  main {
+    width: 100%;
+    padding: 20px 16px;
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    grid-template-rows: auto auto;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    .left-col { grid-row: auto; }
+    header { flex-direction: column; gap: 10px; align-items: flex-start; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(99,153,34,0.08);
+  }
+
+  .card h2 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+
+  label:first-of-type { margin-top: 0; }
+
+  input, select {
+    width: 100%;
+    background: var(--pale);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    padding: 10px 14px;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99,153,34,0.15);
+  }
+
+  select option { background: var(--surface); }
+
+  .btn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+
+  .btn-in { background: var(--accent); color: #fff; }
+  .btn-out { background: var(--red); color: #fff; margin-top: 10px; }
+  .btn-clear { background: var(--pale2); color: var(--muted); border: 1px solid var(--border); font-size: 0.82rem; }
+
+  /* register table */
+  .register-card {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: start;
+    overflow: hidden;
+  }
+
+  .register-card .table-wrap {
+    overflow-x: auto;
+    width: 100%;
+  }
+
+  .reg-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .reg-controls input {
+    flex: 1;
+    min-width: 160px;
+    margin: 0;
+  }
+
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+
+  .filter-btn.active, .filter-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  thead th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--pale2);
+    transition: background 0.1s;
+  }
+
+  tbody tr.visit-row, tbody tr.visit-row-last { border-bottom: none; }
+  tbody tr.person-primary.has-visits { border-bottom: none; }
+
+  tr.offsite-row td { background: #f0f0f0; color: #888; }
+  tr.offsite-row td .type-tag { opacity: 0.6; }
+  tr.offsite-visit-row td { background: #f0f0f0 !important; color: #888 !important; }
+  tr.offsite-visit-row td span.visit-label { color: #888 !important; opacity: 1; }
+
+  tbody tr:hover { background: rgba(99,153,34,0.05); }
+
+  tbody td {
+    padding: 11px 12px;
+    vertical-align: middle;
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+
+  .dot-in { background: var(--green); box-shadow: 0 0 5px var(--green); }
+  .dot-out { background: var(--muted); }
+
+  .type-tag {
+    font-size: 0.68rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .tag-contractor { background: rgba(99,153,34,0.12); color: #3B6D11; border: 1px solid rgba(99,153,34,0.35); }
+  .tag-visitor    { background: rgba(39,80,10,0.08); color: #27500A; border: 1px solid rgba(39,80,10,0.25); }
+  .tag-staff      { background: var(--pale2); color: var(--accent); border: 1px solid var(--border); }
+  .tag-delivery   { background: rgba(151,196,89,0.15); color: #4a7a10; border: 1px solid rgba(151,196,89,0.4); }
+
+  .sign-out-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .sign-out-btn:hover { border-color: var(--red); color: var(--red); }
+
+  .sign-back-in-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .sign-back-in-btn:hover { border-color: var(--green); color: var(--green); }
+
+  tr.person-primary td { padding-top: 14px; padding-bottom: 4px; border-top: 1px solid var(--pale2); }
+  tr.person-primary:first-of-type td { border-top: none; }
+  tr.person-primary.has-visits td { border-bottom: none; }
+
+  tr.visit-row td {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    font-size: 0.78rem;
+    border-bottom: none;
+    color: var(--muted);
+  }
+
+  tr.visit-row-last td { padding-bottom: 12px; border-bottom: none; }
+
+  .visit-label {
+    font-size: 0.63rem;
+    color: var(--muted);
+    opacity: 0.6;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-right: 4px;
+  }
+
+  .empty-msg {
+    text-align: center;
+    color: var(--muted);
+    padding: 40px 0;
+    font-size: 0.82rem;
+  }
+
+  /* Fire roll call overlay */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .overlay.show { display: flex; }
+
+  .fire-modal {
+    background: #fff8f6;
+    border: 2px solid var(--accent2);
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 560px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .fire-modal h2 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent2);
+    margin-bottom: 6px;
+  }
+
+  .fire-modal p { color: var(--muted); font-size: 0.8rem; margin-bottom: 20px; }
+
+  .fire-list { list-style: none; }
+
+  .fire-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #fde8e2;
+    font-size: 0.85rem;
+    align-items: center;
+  }
+
+  .fire-list li .name { font-weight: 500; }
+  .fire-list li .company { color: var(--muted); font-size: 0.75rem; }
+
+  .accounted {
+    font-size: 0.72rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+
+  .accounted.yes { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .accounted.no { background: var(--red); color: #fff; border-color: var(--red); }
+
+  .fire-summary {
+    margin-top: 20px;
+    padding: 14px;
+    background: var(--pale2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.82rem;
+  }
+
+  .close-fire {
+    margin-top: 20px;
+    background: var(--pale2);
+    border: none;
+    color: var(--dark);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .close-fire:hover { background: var(--border); }
+
+  .add-passenger-btn {
+    margin-top: 10px;
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    transition: border-color 0.15s, color 0.15s;
+    letter-spacing: 0.05em;
+  }
+
+  .add-passenger-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .passenger-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .passenger-row input { margin: 0; flex: 1; }
+
+  .remove-passenger {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 6px;
+    width: 32px;
+    height: 36px;
+    font-size: 1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.15s, color 0.15s;
+    line-height: 1;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .remove-passenger:hover { border-color: var(--red); color: var(--red); }
+
+  .passenger-label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 14px;
+    margin-bottom: 0;
+    display: block;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 12px 18px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    color: var(--text);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.25s;
+    z-index: 300;
+    pointer-events: none;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { border-left-color: var(--red); }
+
+  .edit-row-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+
+  .edit-row-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .save-row-btn {
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+
+  .save-row-btn:hover { opacity: 0.85; }
+
+  .delete-row-btn {
+    background: transparent;
+    border: 1px solid var(--red);
+    color: var(--red);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+
+  .delete-row-btn:hover { background: var(--red); color: #fff; }
+
+  .inline-edit-input {
+    background: var(--pale);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    padding: 4px 8px;
+    width: 100%;
+    min-width: 80px;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99,153,34,0.15);
+  }
+
+  .inline-edit-select {
+    background: var(--pale);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    padding: 4px 8px;
+    width: 100%;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99,153,34,0.15);
+  }
+
+  tr.editing-row td { background: rgba(99,153,34,0.04); }
+
+  /* Autocomplete */
+  .ac-wrap {
+    position: relative;
+  }
+
+  .ac-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 4px 12px rgba(99,153,34,0.15);
+    z-index: 50;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .ac-dropdown.open { display: block; }
+
+  .ac-item {
+    padding: 9px 14px;
+    font-size: 0.86rem;
+    cursor: pointer;
+    color: var(--text);
+    border-bottom: 1px solid var(--pale2);
+    transition: background 0.1s;
+  }
+
+  .ac-item:last-child { border-bottom: none; }
+  .ac-item:hover, .ac-item.ac-active { background: var(--pale2); }
+
+  .ac-item .ac-sub {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* Reg autocomplete — split layout */
+  .ac-item-reg {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--pale2);
+    transition: background 0.1s;
+  }
+
+  .ac-item-reg:last-child { border-bottom: none; }
+  .ac-item-reg:hover { background: rgba(99,153,34,0.04); }
+
+  .ac-reg-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .ac-reg-plate {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 4px;
+    transition: background 0.12s, color 0.12s;
+    flex-shrink: 0;
+  }
+
+  .ac-reg-plate:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .ac-names-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 5px;
+  }
+
+  .ac-name-chip {
+    font-size: 0.72rem;
+    background: var(--pale2);
+    border: 1px solid var(--border);
+    color: var(--dark);
+    border-radius: 20px;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    white-space: nowrap;
+  }
+
+  .ac-name-chip:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .ac-name-chip.shift-selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 0 2px rgba(99,153,34,0.35);
+  }
+
+  .ac-name-chip .chip-company {
+    opacity: 0.65;
+    margin-left: 4px;
+  }
+
+  /* ── Backend Management Page ─────────────────────────────── */
+  .backend-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 500;
+    overflow-y: auto;
+    flex-direction: column;
+  }
+
+  .backend-overlay.show { display: flex; }
+
+  .backend-header {
+    background: var(--dark);
+    border-bottom: 3px solid var(--light-green);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    flex-shrink: 0;
+  }
+
+  .backend-header h1 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--light-green);
+  }
+
+  .backend-header h1 span { color: rgba(255,255,255,0.6); font-weight: 400; }
+
+  .backend-close-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    letter-spacing: 0.04em;
+  }
+
+  .backend-close-btn:hover { background: rgba(255,255,255,0.2); }
+
+  .backend-body {
+    padding: 28px 32px;
+    max-width: 960px;
+    width: 100%;
+    margin: 0 auto;
+    flex: 1;
+  }
+
+  .backend-intro {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  .backend-intro strong { color: var(--text); }
+
+  /* Company blocks */
+  .company-block {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(99,153,34,0.06);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .company-block.drag-over {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99,153,34,0.18);
+    background: rgba(99,153,34,0.03);
+  }
+
+  .company-block-header {
+    background: var(--pale2);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .company-block-header h3 {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--dark);
+    letter-spacing: 0.04em;
+    flex: 1;
+  }
+
+  .company-count-badge {
+    font-size: 0.65rem;
+    background: var(--accent);
+    color: #fff;
+    padding: 2px 9px;
+    border-radius: 20px;
+    letter-spacing: 0.07em;
+    font-weight: 600;
+  }
+
+  .be-delete-company-btn {
+    background: transparent;
+    border: 1px solid var(--red);
+    color: var(--red);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.65rem;
+    padding: 3px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+  }
+
+  .be-delete-company-btn:hover { background: var(--red); color: #fff; }
+
+  /* Items grid inside company block */
+  .be-items-area {
+    padding: 12px 16px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 56px;
+  }
+
+  .be-items-area.empty-drop-zone {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .be-drop-hint {
+    font-size: 0.72rem;
+    color: var(--muted);
+    opacity: 0.5;
+    letter-spacing: 0.06em;
+    pointer-events: none;
+  }
+
+  /* Name chip */
+  .be-name-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--pale2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 10px 5px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--dark);
+    cursor: grab;
+    user-select: none;
+    transition: border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
+    position: relative;
+  }
+
+  .be-name-chip:hover { border-color: var(--accent); box-shadow: 0 1px 4px rgba(99,153,34,0.15); }
+  .be-name-chip.dragging { opacity: 0.4; cursor: grabbing; }
+
+  .be-name-chip .chip-type {
+    font-size: 0.6rem;
+    opacity: 0.55;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .be-chip-del {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 0.8rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+    border-radius: 50%;
+    transition: color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .be-chip-del:hover { color: var(--red); }
+
+  /* Reg plate chip */
+  .be-reg-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #F5C518;
+    border: 1.5px solid #c9a000;
+    border-radius: 4px;
+    padding: 4px 6px 4px 10px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #111;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: grab;
+    user-select: none;
+    transition: box-shadow 0.15s, opacity 0.15s;
+    position: relative;
+  }
+
+  .be-reg-chip:hover { box-shadow: 0 1px 5px rgba(0,0,0,0.18); }
+  .be-reg-chip.dragging { opacity: 0.4; cursor: grabbing; }
+
+  .be-reg-chip-owner {
+    font-size: 0.58rem;
+    font-weight: 500;
+    color: #555;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    display: block;
+    line-height: 1;
+  }
+
+  .be-reg-edit-btn {
+    background: rgba(0,0,0,0.08);
+    border: none;
+    color: #555;
+    font-size: 0.65rem;
+    cursor: pointer;
+    padding: 1px 4px;
+    border-radius: 3px;
+    transition: background 0.12s;
+    line-height: 1.4;
+    flex-shrink: 0;
+  }
+
+  .be-reg-edit-btn:hover { background: rgba(0,0,0,0.18); }
+
+  .be-reg-del-btn {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 0.8rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+    border-radius: 50%;
+    transition: color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .be-reg-del-btn:hover { color: var(--red); }
+
+  /* Inline reg edit input */
+  .be-reg-inline-input {
+    background: #fff;
+    border: 1.5px solid #c9a000;
+    border-radius: 3px;
+    color: #111;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    width: 90px;
+    outline: none;
+  }
+
+  .be-empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 60px 0;
+    font-size: 0.85rem;
+  }
+
+  .be-empty strong { color: var(--text); display: block; font-size: 1rem; margin-bottom: 6px; }
+
+  /* section label */
+  .be-section-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    width: 100%;
+    margin-bottom: 2px;
+    margin-top: 4px;
+  }
+
+  .be-section-label:first-child { margin-top: 0; }
+
+  @media (max-width: 600px) {
+    .backend-body { padding: 16px; }
+    .backend-header { padding: 14px 16px; }
+  }
+
+  /* Name chip edit button */
+  .be-chip-edit {
+    background: rgba(99,153,34,0.12);
+    border: none;
+    color: var(--accent);
+    font-size: 0.65rem;
+    cursor: pointer;
+    padding: 1px 4px;
+    border-radius: 3px;
+    transition: background 0.12s;
+    line-height: 1.4;
+    flex-shrink: 0;
+  }
+
+  .be-chip-edit:hover { background: rgba(99,153,34,0.28); }
+
+  /* Inline name edit input (inside name chip) */
+  .be-name-inline-input {
+    background: #fff;
+    border: 1.5px solid var(--accent);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 2px 6px;
+    width: 130px;
+    outline: none;
+  }
+
+  /* Company name edit button in header */
+  .be-company-edit-btn {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(99,153,34,0.3);
+    color: var(--accent);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.65rem;
+    cursor: pointer;
+    padding: 2px 7px;
+    border-radius: 4px;
+    transition: background 0.12s, border-color 0.12s;
+    line-height: 1.5;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .be-company-edit-btn:hover { background: rgba(99,153,34,0.15); border-color: var(--accent); }
+
+  /* Inline company name editor in header */
+  .be-company-inline-input {
+    background: #fff;
+    border: 1.5px solid var(--accent);
+    border-radius: 4px;
+    color: var(--dark);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    flex: 1;
+    outline: none;
+    min-width: 0;
+    box-shadow: 0 0 0 2px rgba(99,153,34,0.15);
+  }
+
+  /* ── End Backend Management Page ──────────────────────────── */
+
+  /* UK-style number plate */
+  .reg-plate {
+    display: inline-block;
+    background: #F5C518;
+    color: #111;
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: 0.14em;
+    padding: 5px 12px 4px;
+    border-radius: 4px;
+    border: 2px solid #c9a000;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.3);
+    white-space: nowrap;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>LRL CONTRACTORS<span>/ VISITORS REGISTER</span></h1>
+  <div class="onsite-badge" id="todayDate"></div>
+</header>
+
+<main>
+  <div class="left-col">
+  <!-- Sign In Form -->
+  <div class="card">
+    <h2>Sign In</h2>
+    <label>Full Name</label>
+    <div class="ac-wrap" id="ac-wrap-nameIn">
+      <input type="text" id="nameIn" placeholder="" autocomplete="off" oninput="acInput('nameIn')" onkeydown="acKeydown(event,'nameIn')" onfocus="acInput('nameIn')">
+      <div class="ac-dropdown" id="ac-drop-nameIn"></div>
+    </div>
+
+    <div id="passengerList"></div>
+    <button class="add-passenger-btn" id="addPassengerBtn" onclick="addPassenger()">+ Add Passenger</button>
+
+    <label>Company / Organisation</label>
+    <div class="ac-wrap" id="ac-wrap-companyIn">
+      <input type="text" id="companyIn" placeholder="" autocomplete="off"
+        oninput="acCompanyInput()"
+        onfocus="acCompanyInput()"
+        onkeydown="acKeydown(event,'companyIn')">
+      <div class="ac-dropdown" id="ac-drop-companyIn"></div>
+    </div>
+    <label>Type</label>
+    <select id="typeIn">
+      <option value="contractor">Contractor</option>
+      <option value="visitor">Visitor</option>
+    </select>
+    <label>Vehicle Registration</label>
+    <div class="ac-wrap" id="ac-wrap-vehicleIn">
+      <input type="text" id="vehicleIn" placeholder="" autocomplete="off" style="text-transform:uppercase" oninput="acVehicleInput()" onkeydown="acKeydown(event,'vehicleIn')" onfocus="acVehicleInput()">
+      <div class="ac-dropdown" id="ac-drop-vehicleIn"></div>
+    </div>
+    <label>Host / Purpose</label>
+    <input type="text" id="hostIn" placeholder="e.g. Meeting with J. Taylor" autocomplete="off">
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-in" style="margin-top:0;flex:1;" onclick="signIn()">▶ Sign In</button>
+      <button class="btn btn-clear" style="margin-top:0;width:auto;padding:12px 18px;" onclick="clearSignIn()">✕ Clear</button>
+    </div>
+  </div>
+
+  <!-- Sign Out Form -->
+  <div class="card">
+    <h2>Sign Out</h2>
+    <label>Select Vehicle to Sign Out</label>
+    <select id="signOutSelect">
+      <option value="">— choose vehicle —</option>
+    </select>
+    <div id="vehicleOccupants" style="margin-top:10px;min-height:18px;font-size:0.75rem;color:var(--muted);letter-spacing:0.04em;"></div>
+    <button class="btn btn-out" onclick="signOutSelected()">◼ Sign Out Vehicle &amp; All Occupants</button>
+
+  </div>
+
+  </div><!-- end left-col -->
+
+  <!-- Register Table -->
+  <div class="card register-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);gap:12px;">
+      <h2 style="margin:0;padding:0;border:none;white-space:nowrap;">Today's Register <span id="registerDate" style="font-weight:400;color:var(--text);font-size:0.78rem;letter-spacing:0.04em;opacity:0.5;"></span></h2>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto;margin-right:12px;">
+        <div style="display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 12px;">
+          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 4px var(--green);flex-shrink:0;"></span>
+          <span style="font-size:1rem;font-weight:700;color:var(--green);line-height:1;" id="statOnsite">0</span>
+          <span style="font-size:0.65rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;">On Site</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 12px;">
+          <span style="font-size:1rem;font-weight:700;color:var(--muted);line-height:1;" id="statTotal">0</span>
+          <span style="font-size:0.65rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;">Today</span>
+        </div>
+      </div>
+      <button class="filter-btn" style="border-color:rgba(99,153,34,0.5);color:var(--accent);font-weight:600;white-space:nowrap;" onclick="printRegister()">🖨 Print Register</button>
+    </div>
+    <div class="reg-controls">
+      <input type="text" id="searchInput" placeholder="Search name or company…" oninput="renderTable()">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
+      <button class="filter-btn" data-filter="onsite" onclick="setFilter('onsite', this)">On Site</button>
+      <button class="filter-btn" data-filter="left" onclick="setFilter('left', this)">Off Site</button>
+      <button class="filter-btn" style="margin-left:auto;border-color:rgba(99,153,34,0.4);color:var(--accent)" onclick="exportCSV()">↓ Export Excel</button>
+      <button class="filter-btn" style="border-color:rgba(99,153,34,0.5);color:var(--accent);font-weight:600;" onclick="savePDF()">📧 Save / Email</button>
+    </div>
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Name</th>
+          <th>Induction</th>
+          <th>Company</th>
+          <th>Type</th>
+          <th>Host / Purpose</th>
+          <th>Vehicle Reg</th>
+          <th>In</th>
+          <th>Out</th>
+          <th></th>
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="registerBody">
+        <tr><td colspan="11" class="empty-msg">No entries.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</main>
+
+<!-- Clear Register Modal -->
+<div class="overlay" id="clearOverlay">
+  <div class="fire-modal" style="border-color:var(--border);background:var(--surface);max-width:420px;">
+    <h2 style="color:var(--red);font-size:1.1rem;">⚠ Clear Register</h2>
+    <p style="margin-top:8px;margin-bottom:24px;line-height:1.6;">Are you sure you want to clear the fire register?<br><br>This will permanently delete <strong style="color:var(--text)">all entries</strong> for today and cannot be undone.</p>
+    <button class="btn" onclick="confirmClear()" style="background:var(--red);color:#fff;margin-top:0;">Yes, Clear Register</button>
+    <button class="close-fire" style="margin-top:10px;background:transparent;border:1px solid var(--border);" onclick="closeClearModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- Clear Register trigger — tucked at the bottom -->
+<footer style="padding:40px 24px 32px;border-top:1px solid var(--border);margin-top:8px;display:flex;justify-content:center;align-items:center;position:relative;">
+  <button onclick="openBackendPage()" style="position:absolute;left:24px;background:var(--pale2);border:1px solid var(--muted);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.78rem;letter-spacing:0.08em;cursor:pointer;transition:color 0.2s,border-color 0.2s,background 0.2s;padding:9px 20px;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)';this.style.background='var(--pale2)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--muted)';this.style.background='var(--pale2)'">⚙ manage data</button>
+  <button onclick="openClearModal()" style="background:var(--pale2);border:1px solid var(--accent);border-radius:4px;color:var(--accent);font-family:'DM Sans',sans-serif;font-size:0.78rem;letter-spacing:0.08em;cursor:pointer;transition:color 0.2s,border-color 0.2s,background 0.2s;padding:9px 20px;" onmouseover="this.style.color='#c0392b';this.style.borderColor='#c0392b'" onmouseout="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'">clear register</button>
+  <button onclick="openInductionPage()" style="position:absolute;right:24px;background:var(--pale2);border:1px solid var(--muted);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.78rem;letter-spacing:0.08em;cursor:pointer;transition:color 0.2s,border-color 0.2s;padding:9px 20px;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--muted)'">📋 induction data</button>
+
+</footer>
+
+<!-- Clear Data Memory Modal -->
+<div class="overlay" id="clearMemoryOverlay">
+  <div class="fire-modal" style="border-color:var(--border);background:var(--surface);max-width:420px;">
+    <h2 style="color:var(--red);font-size:1.1rem;">⚠ Clear Data Memory</h2>
+    <p style="margin-top:8px;margin-bottom:24px;line-height:1.6;">Are you sure? This will wipe <strong style="color:var(--text)">all stored data</strong> — every entry across all dates — and cannot be undone.<br><br>The autocomplete suggestions will also be cleared.</p>
+    <button class="btn" onclick="confirmClearMemory()" style="background:var(--red);color:#fff;margin-top:0;">Yes, Wipe All Data</button>
+    <button class="close-fire" style="margin-top:10px;background:transparent;border:1px solid var(--border);" onclick="closeClearMemoryModal()">Cancel</button>
+  </div>
+</div>
+<div class="overlay" id="fireOverlay">
+  <div class="fire-modal">
+    <h2>🔥 FIRE ROLL CALL</h2>
+    <p>Mark each person as accounted for at the muster point.</p>
+    <ul class="fire-list" id="fireList"></ul>
+    <div class="fire-summary" id="fireSummary"></div>
+    <button class="close-fire" onclick="closeFireModal()">Close Roll Call</button>
+  </div>
+</div>
+
+<!-- Sign Back In — Vehicle Companions Modal -->
+<div class="overlay" id="sbiOverlay">
+  <div class="fire-modal" style="border-color:var(--border);background:var(--surface);max-width:440px;">
+    <h2 style="color:var(--accent);font-size:1.1rem;">↩ Sign Back In</h2>
+    <p style="margin-top:8px;margin-bottom:6px;line-height:1.6;color:var(--text);">
+      Would you like to sign back in all previous occupants of this vehicle?
+    </p>
+    <p style="margin-bottom:20px;font-size:0.78rem;color:var(--muted);">
+      <strong style="color:var(--text)" id="sbiModal_companionList"></strong> also arrived in this vehicle.
+    </p>
+    <button class="btn" onclick="sbiAllOccupants()" style="background:var(--accent);color:#fff;margin-top:0;">
+      ✓ Sign In All Occupants
+    </button>
+    <button class="close-fire" style="margin-top:10px;background:transparent;border:1px solid var(--border);color:var(--text);" onclick="sbiJustOne()">
+      Just sign in <span id="sbiModal_primaryName"></span>
+    </button>
+    <input type="hidden" id="sbiModal_primaryId">
+    <input type="hidden" id="sbiModal_companionIds">
+  </div>
+</div>
+
+<!-- Delete Entry Modal -->
+<div class="overlay" id="deleteOverlay">
+  <div class="fire-modal" style="border-color:var(--red);background:var(--surface);max-width:420px;">
+    <h2 style="color:var(--red);font-size:1.1rem;">⚠ Delete Entry</h2>
+    <p style="margin-top:8px;margin-bottom:24px;line-height:1.6;">Are you sure you want to delete the entry for <strong id="deleteModalName" style="color:var(--text)"></strong>?<br><br>This cannot be undone.</p>
+    <button class="btn" onclick="doDelete()" style="background:var(--red);color:#fff;margin-top:0;">Yes, Delete Entry</button>
+    <button class="close-fire" style="margin-top:10px;background:transparent;border:1px solid var(--border);" onclick="closeDeleteModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- Induction Warning Modal -->
+<div class="overlay" id="inductionWarnOverlay">
+  <div class="fire-modal" style="border-color:#f5c6cb;background:var(--surface);max-width:460px;">
+    <h2 style="color:#c0392b;font-size:1.1rem;">⚠ Induction Warning</h2>
+    <p style="margin-top:10px;margin-bottom:18px;line-height:1.65;color:var(--text)" id="inductionWarnMsg"></p>
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:20px;">Do you still want to sign this person in?</p>
+    <button class="btn" onclick="inductionWarnProceed()" style="background:#c0392b;color:#fff;margin-top:0;">Yes, Sign In Anyway</button>
+    <button class="close-fire" style="margin-top:10px;background:transparent;border:1px solid var(--border);color:var(--text);" onclick="inductionWarnCancel()">No, Go Back</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ── Induction Data Page ───────────────────────────────────── -->
+<div id="inductionOverlay" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:500;overflow-y:auto;">
+  <div style="background:var(--dark);border-bottom:3px solid var(--light-green);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;">
+    <h1 style="font-family:'DM Sans',sans-serif;font-size:1.2rem;font-weight:700;letter-spacing:0.04em;color:var(--light-green);">INDUCTION DATA <span style="color:rgba(255,255,255,0.6);font-weight:400;">/ Upload Weekly Spreadsheet</span></h1>
+    <button onclick="closeInductionPage()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);color:#fff;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;padding:8px 18px;border-radius:6px;cursor:pointer;letter-spacing:0.04em;">✕ Close</button>
+  </div>
+  <div style="padding:28px 32px;max-width:760px;width:100%;margin:0 auto;">
+    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:28px;line-height:1.6;">
+      Upload your weekly site induction spreadsheet (.xlsx) to update induction expiry dates shown on the register.
+      The file should have <strong style="color:var(--text)">names in column A</strong> and cells containing <strong style="color:var(--text)">Exp: DD-MM-YYYY</strong> in columns B or C.
+    </p>
+
+    <!-- Summary stats -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px;box-shadow:0 2px 8px rgba(99,153,34,0.08);">
+      <h2 style="font-size:0.95rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);">Current Induction Records</h2>
+      <div id="inductionSummaryContent"><p style="color:var(--muted);font-size:0.82rem;">No data loaded yet.</p></div>
+    </div>
+
+    <!-- Drop zone -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:0 2px 8px rgba(99,153,34,0.08);">
+      <h2 style="font-size:0.95rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);">Upload New Spreadsheet</h2>
+      <div id="inductionDropZone"
+        ondragover="inductionDragOver(event)"
+        ondragleave="inductionDragLeave(event)"
+        ondrop="inductionDrop(event)"
+        onclick="document.getElementById('inductionFileInput').click()"
+        style="border:2px dashed var(--border);border-radius:8px;background:var(--pale);padding:48px 24px;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;">
+        <div style="font-size:2.5rem;margin-bottom:12px;">📂</div>
+        <div style="font-size:0.95rem;font-weight:600;color:var(--text);margin-bottom:6px;">Drag &amp; drop your .xlsx file here</div>
+        <div style="font-size:0.78rem;color:var(--muted);">or click to browse files</div>
+      </div>
+      <input type="file" id="inductionFileInput" accept=".xlsx" style="display:none" onchange="inductionFileSelected(event)">
+      <div id="inductionStatus" style="display:none;margin-top:16px;padding:12px 16px;border-radius:6px;font-size:0.82rem;line-height:1.5;"></div>
+    </div>
+
+    <!-- Clear induction data -->
+    <div style="margin-top:16px;text-align:right;">
+      <button onclick="clearInductionData()" style="background:transparent;border:1px solid var(--muted);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.75rem;padding:7px 16px;border-radius:4px;cursor:pointer;letter-spacing:0.05em;transition:color 0.15s,border-color 0.15s;" onmouseover="this.style.color='var(--red)';this.style.borderColor='var(--red)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--muted)'">🗑 Clear uploaded data &amp; revert to embedded</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Backend Management Page ──────────────────────────────── -->
+<div class="backend-overlay" id="backendOverlay">
+  <div class="backend-header">
+    <h1>MANAGE DATA <span>/ Autocomplete Records</span></h1>
+    <button class="backend-close-btn" onclick="closeBackendPage()">✕ Close</button>
+  </div>
+  <div class="backend-body">
+    <p class="backend-intro">
+      Edit or delete the <strong>names and vehicle registrations</strong> stored for autocomplete suggestions.
+      Records are grouped by company and sorted alphabetically. Changes take effect immediately.
+    </p>
+    <div id="backendContent"></div>
+  </div>
+</div>
+
+<script>
+  let log = JSON.parse(localStorage.getItem('siteLog_v1') || '[]');
+
+  // === INDUCTION DATA (from Site_Induction spreadsheet) ===
+  const INDUCTION_DATA = {};
+;
+
+  function getInduction(name) {
+    if (!name) return null;
+    const key = name.trim().toLowerCase().replace(/\s+/g, ' ');
+    return INDUCTION_DATA[key] || null;
+  }
+
+  // Returns true if any induction data has been loaded (either embedded or uploaded)
+  function hasInductionData() {
+    return Object.keys(INDUCTION_DATA).length > 0;
+  }
+
+  // Returns induction status for a name chip: 'none' | 'valid' | 'expired'
+  function inductionChipStatus(name) {
+    if (!hasInductionData()) return 'none';
+    const expStr = getInduction(name);
+    if (!expStr) return 'expired'; // data loaded but no record = treat as expired/unknown
+    const parts = expStr.split('-');
+    const expDate = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+    const today = new Date(); today.setHours(0,0,0,0);
+    return expDate >= today ? 'valid' : 'expired';
+  }
+
+  // Returns inline style string for a name chip based on induction status
+  function inductionChipStyle(name) {
+    const status = inductionChipStatus(name);
+    if (status === 'expired') {
+      const expStr = getInduction(name);
+      const tooltip = expStr ? `title="⚠ Induction expired: ${expStr}"` : `title="⚠ No induction record found"`;
+      return { style: 'background:#fdecea;border-color:#f5c6cb;color:#c0392b;', title: tooltip };
+    }
+    if (status === 'valid') {
+      const expStr = getInduction(name);
+      return { style: '', title: `title="✓ Induction valid to ${expStr}"` };
+    }
+    return { style: '', title: '' };
+  }
+
+  function inductionBadge(name) {
+    const expStr = getInduction(name);
+    if (!expStr) return '<span style="color:#999;font-size:0.72rem;font-style:italic;">No record</span>';
+    const parts = expStr.split('-');
+    const expDate = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+    const today = new Date(); today.setHours(0,0,0,0);
+    const valid = expDate >= today;
+    const colour = valid ? '#2e7d32' : '#c0392b';
+    const bg = valid ? '#e8f5e9' : '#fdecea';
+    const bdr = valid ? '#a5d6a7' : '#f5c6cb';
+    return '<span style="display:inline-block;font-size:0.7rem;font-weight:600;padding:2px 7px;border-radius:4px;border:1px solid ' + bdr + ';background:' + bg + ';color:' + colour + ';white-space:nowrap;">Exp: ' + expStr + '</span>';
+  }
+
+  // acMemory stores name→{name,company,type,vehicles:[],host} across ALL time for autocomplete.
+  // It is ONLY cleared by "Clear Data Memory", never by "Clear Register".
+  let acMemory = JSON.parse(localStorage.getItem('siteAcMemory_v1') || '{}');
+  // Migrate legacy acMemory entries that stored a single vehicle string → vehicles array
+  Object.values(acMemory).forEach(m => {
+    if (!Array.isArray(m.vehicles)) {
+      m.vehicles = m.vehicle ? [m.vehicle.trim().toUpperCase()] : [];
+      delete m.vehicle;
+    }
+  });
+  // Seed acMemory from log on first load (backwards compatibility)
+  if (!localStorage.getItem('siteAcMemory_v1') && log.length) {
+    log.forEach(e => {
+      if (!e.name) return;
+      const key = e.name.toLowerCase();
+      if (!acMemory[key]) acMemory[key] = { name: e.name, company: e.company||'', type: e.type, vehicles: e.vehicle ? [e.vehicle.trim().toUpperCase()] : [], host: e.host||'' };
+      else {
+        if (e.company) acMemory[key].company = e.company;
+        if (e.vehicle) { const v = e.vehicle.trim().toUpperCase(); if (!acMemory[key].vehicles.includes(v)) acMemory[key].vehicles.push(v); }
+        if (e.host)    acMemory[key].host    = e.host;
+        acMemory[key].type = e.type;
+      }
+    });
+    localStorage.setItem('siteAcMemory_v1', JSON.stringify(acMemory));
+  }
+  let filter = 'all';
+  let fireAccounted = {};
+
+  function todayKey() {
+    return new Date().toISOString().slice(0,10);
+  }
+
+  function todayEntries() {
+    return log.filter(e => e.date === todayKey());
+  }
+
+  function fmt(ts) {
+    if (!ts) return '—';
+    return new Date(ts).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+  }
+
+  function save() {
+    localStorage.setItem('siteLog_v1', JSON.stringify(log));
+    localStorage.setItem('siteAcMemory_v1', JSON.stringify(acMemory));
+  }
+
+  function updateAcMemory(entries) {
+    entries.forEach(e => {
+      if (!e.name) return;
+      const key = e.name.toLowerCase();
+      if (!acMemory[key]) {
+        acMemory[key] = { name: e.name, company: e.company||'', type: e.type, vehicles: e.vehicle ? [e.vehicle.trim().toUpperCase()] : [], host: e.host||'' };
+      } else {
+        if (e.company) acMemory[key].company = e.company;
+        if (e.vehicle) { const v = e.vehicle.trim().toUpperCase(); if (!Array.isArray(acMemory[key].vehicles)) acMemory[key].vehicles = []; if (!acMemory[key].vehicles.includes(v)) acMemory[key].vehicles.push(v); }
+        if (e.host)    acMemory[key].host    = e.host;
+        acMemory[key].type = e.type;
+      }
+    });
+  }
+
+  function toast(msg, err) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (err ? ' error' : '');
+    setTimeout(() => el.className = 'toast', 2500);
+  }
+
+  let passengerCount = 0;
+
+  function addPassenger() {
+    passengerCount++;
+    const list = document.getElementById('passengerList');
+    const row = document.createElement('div');
+    row.className = 'passenger-row';
+    row.id = `prow-${passengerCount}`;
+    const pid = `passenger-${passengerCount}`;
+    row.innerHTML = `
+      <span class="passenger-label" style="display:none"></span>
+      <div class="ac-wrap" style="flex:1;margin:0" id="ac-wrap-${pid}">
+        <input type="text" id="${pid}" placeholder="Passenger name" autocomplete="off"
+          oninput="acInput('${pid}')" onkeydown="acKeydown(event,'${pid}')" onfocus="acInput('${pid}')">
+        <div class="ac-dropdown" id="ac-drop-${pid}"></div>
+      </div>
+      <button class="remove-passenger" onclick="removePassenger(${passengerCount})" title="Remove">×</button>
+    `;
+    list.appendChild(row);
+    document.getElementById('addPassengerBtn').textContent = '+ Add More Passengers';
+    document.getElementById(pid).focus();
+  }
+
+  function removePassenger(n) {
+    const row = document.getElementById(`prow-${n}`);
+    if (row) row.remove();
+    if (document.getElementById('passengerList').children.length === 0) {
+      document.getElementById('addPassengerBtn').textContent = '+ Add Passenger';
+    }
+  }
+
+  // Pending sign-in state used by the induction warning modal
+  let _pendingSignIn = null;
+
+  function signIn() {
+    const name = document.getElementById('nameIn').value.trim();
+    const company = document.getElementById('companyIn').value.trim();
+    const type = document.getElementById('typeIn').value;
+    const host = document.getElementById('hostIn').value.trim();
+    const vehicle = document.getElementById('vehicleIn').value.trim().toUpperCase();
+    if (!name) { toast('Please enter a name.', true); return; }
+
+    // Collect passenger names
+    const passengerInputs = document.querySelectorAll('#passengerList input');
+    const passengers = Array.from(passengerInputs).map(i => i.value.trim()).filter(Boolean);
+
+    // All names to sign in
+    const allNames = [name, ...passengers];
+
+    // Check for duplicates already on site
+    for (const n of allNames) {
+      const already = todayEntries().find(e => e.name.toLowerCase() === n.toLowerCase() && !e.out);
+      if (already) { toast(`${n} is already on site.`, true); return; }
+    }
+
+    // ── Induction check: only warn when induction data is loaded ──
+    if (hasInductionData()) {
+      // Find the first person in the list who has a missing or expired induction
+      let warnName = null, warnMsg = null;
+      for (const n of allNames) {
+        const expStr = getInduction(n);
+        if (!expStr) {
+          warnName = n;
+          warnMsg = `<strong>${n}</strong> has no induction record on file.`;
+          break;
+        } else {
+          const parts = expStr.split('-');
+          const expDate = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+          const today = new Date(); today.setHours(0,0,0,0);
+          if (expDate < today) {
+            warnName = n;
+            warnMsg = `<strong>${n}</strong>'s induction expired on <strong>${expStr}</strong>.`;
+            break;
+          }
+        }
+      }
+
+      if (warnName) {
+        // Store everything needed to complete the sign-in if user clicks "Yes"
+        _pendingSignIn = { name, company, type, host, vehicle, passengers, allNames };
+        document.getElementById('inductionWarnMsg').innerHTML = warnMsg;
+        document.getElementById('inductionWarnOverlay').classList.add('show');
+        return; // pause — user must confirm
+      }
+    }
+
+    doSignIn({ name, company, type, host, vehicle, passengers, allNames });
+  }
+
+  function inductionWarnProceed() {
+    document.getElementById('inductionWarnOverlay').classList.remove('show');
+    if (_pendingSignIn) {
+      doSignIn(_pendingSignIn);
+      _pendingSignIn = null;
+    }
+  }
+
+  function inductionWarnCancel() {
+    document.getElementById('inductionWarnOverlay').classList.remove('show');
+    _pendingSignIn = null;
+    // Leave the form as-is so the user can correct details
+  }
+
+  // Close induction warning overlay on backdrop click
+  document.getElementById('inductionWarnOverlay').addEventListener('click', function(e) {
+    if (e.target === this) inductionWarnCancel();
+  });
+
+  function doSignIn({ name, company, type, host, vehicle, passengers, allNames }) {
+    const now = Date.now();
+    allNames.forEach((n, i) => {
+      log.push({
+        id: now + i,
+        date: todayKey(),
+        name: n,
+        company, type, host, vehicle,
+        in: now,
+        out: null
+      });
+    });
+
+    updateAcMemory(allNames.map(n => ({ name: n, company, type, host, vehicle })));
+    save();
+
+    // Clear form
+    document.getElementById('nameIn').value = '';
+    document.getElementById('companyIn').value = '';
+    document.getElementById('vehicleIn').value = '';
+    document.getElementById('hostIn').value = '';
+    document.getElementById('passengerList').innerHTML = '';
+    document.getElementById('addPassengerBtn').textContent = '+ Add Passenger';
+    passengerCount = 0;
+
+    const msg = passengers.length > 0
+      ? `✓ ${name} + ${passengers.length} passenger${passengers.length>1?'s':''} signed in`
+      : `✓ ${name} signed in`;
+    toast(msg);
+    render();
+  }
+
+  function signOut(id) {
+    const entry = log.find(e => e.id === id);
+    if (entry && !entry.out) {
+      entry.out = Date.now();
+      save();
+      toast(`✓ ${entry.name} signed out`);
+      render();
+    }
+  }
+
+  function signOutSelected() {
+    const sel = document.getElementById('signOutSelect');
+    const vreg = sel.value;
+    if (!vreg) { toast('Please select a vehicle.', true); return; }
+
+    // Find all on-site persons with this vehicle (latest entry per person)
+    const onsiteMap = {};
+    todayEntries().filter(e => !e.out).forEach(e => {
+      const key = e.name.toLowerCase();
+      if (!onsiteMap[key] || e.in > onsiteMap[key].in) onsiteMap[key] = e;
+    });
+    const toSignOut = Object.values(onsiteMap).filter(e => {
+      const v = (e.vehicle || '').trim().toUpperCase() || 'NO VEHICLE';
+      return v === vreg;
+    });
+
+    if (!toSignOut.length) { toast('No one to sign out for this vehicle.', true); return; }
+
+    const now = Date.now();
+    toSignOut.forEach(e => {
+      const entry = log.find(l => l.id === e.id);
+      if (entry && !entry.out) entry.out = now;
+    });
+
+    save();
+    sel.value = '';
+    const el = document.getElementById('vehicleOccupants');
+    if (el) el.textContent = '';
+
+    const names = toSignOut.map(e => e.name);
+    const msg = names.length === 1
+      ? `✓ ${names[0]} signed out`
+      : `✓ ${names.length} people signed out (${names.join(', ')})`;
+    toast(msg);
+    render();
+  }
+
+  function setFilter(f, btn) {
+    filter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTable();
+  }
+
+  function render() {
+    renderTable();
+    renderSelectDropdown();
+    renderStats();
+    renderFireBtn();
+  }
+
+  function renderStats() {
+    const entries = todayEntries();
+    // Count unique people currently on site
+    const onsiteNames = new Set(entries.filter(e => !e.out).map(e => e.name.toLowerCase()));
+    // Count unique people seen today
+    const totalNames = new Set(entries.map(e => e.name.toLowerCase()));
+    document.getElementById('statOnsite').textContent = onsiteNames.size;
+    document.getElementById('statTotal').textContent = totalNames.size;
+  }
+
+  function renderFireBtn() {
+    const onsite = new Set(todayEntries().filter(e => !e.out).map(e => e.name.toLowerCase())).size;
+    const el = document.getElementById('onsiteCount');
+    if (el) el.textContent = onsite;
+  }
+
+  function renderSelectDropdown() {
+    const sel = document.getElementById('signOutSelect');
+    const cur = sel.value;
+
+    // Get the latest on-site entry per person (deduplicated by name)
+    const onsiteMap = {};
+    todayEntries().filter(e => !e.out).forEach(e => {
+      const key = e.name.toLowerCase();
+      if (!onsiteMap[key] || e.in > onsiteMap[key].in) onsiteMap[key] = e;
+    });
+    const onsite = Object.values(onsiteMap);
+
+    // Group by vehicle reg (persons with no vehicle go under 'NO VEHICLE')
+    const vehicleMap = {};
+    onsite.forEach(e => {
+      const vKey = (e.vehicle || '').trim().toUpperCase() || 'NO VEHICLE';
+      if (!vehicleMap[vKey]) vehicleMap[vKey] = [];
+      vehicleMap[vKey].push(e);
+    });
+
+    sel.innerHTML = '<option value="">— choose vehicle —</option>';
+    Object.keys(vehicleMap).sort().forEach(vreg => {
+      const o = document.createElement('option');
+      o.value = vreg;
+      o.textContent = vreg === 'NO VEHICLE'
+        ? `No Vehicle (${vehicleMap[vreg].length} person${vehicleMap[vreg].length>1?'s':''})`
+        : `${vreg} — ${vehicleMap[vreg].map(e=>e.name).join(', ')}`;
+      sel.appendChild(o);
+    });
+
+    if (cur && vehicleMap[cur]) sel.value = cur;
+    updateVehicleOccupants(sel.value, vehicleMap);
+
+    // Update occupant list on change
+    sel.onchange = () => updateVehicleOccupants(sel.value, vehicleMap);
+  }
+
+  function updateVehicleOccupants(vreg, vehicleMap) {
+    const el = document.getElementById('vehicleOccupants');
+    if (!el) return;
+    if (!vreg || !vehicleMap || !vehicleMap[vreg]) { el.textContent = ''; return; }
+    const names = vehicleMap[vreg].map(e => e.name);
+    el.innerHTML = `<span style="color:var(--accent);font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;">Will sign out:</span> ${names.join(', ')}`;
+  }
+
+  function renderTable() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const all = todayEntries();
+
+    // Group entries by person key (name+company), preserving first-seen order
+    const groups = [];
+    const groupMap = {};
+    all.forEach(e => {
+      const key = e.name.toLowerCase() + '|' + (e.company||'').toLowerCase();
+      if (!groupMap[key]) {
+        groupMap[key] = { key, entries: [] };
+        groups.push(groupMap[key]);
+      }
+      groupMap[key].entries.push(e);
+    });
+
+    // Sort entries within each group by in-time
+    groups.forEach(g => g.entries.sort((a,b) => a.in - b.in));
+
+    // Current status = latest entry's out status
+    groups.forEach(g => {
+      const latest = g.entries[g.entries.length - 1];
+      g.onsite = !latest.out;
+      g.latest = latest;
+      g.person = latest; // use latest for name/company/type/host/vehicle
+    });
+
+    // Apply filter
+    let filtered = groups.filter(g => {
+      if (filter === 'onsite') return g.onsite;
+      if (filter === 'left') return !g.onsite;
+      return true;
+    });
+
+    // Apply search
+    if (search) {
+      filtered = filtered.filter(g =>
+        g.person.name.toLowerCase().includes(search) ||
+        (g.person.company||'').toLowerCase().includes(search)
+      );
+    }
+
+    // Sort groups: on site first, then by earliest in-time desc
+    filtered.sort((a,b) => {
+      if (a.onsite !== b.onsite) return a.onsite ? -1 : 1;
+      return b.entries[0].in - a.entries[0].in;
+    });
+
+    const tbody = document.getElementById('registerBody');
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="11" class="empty-msg">No entries.</td></tr>';
+      return;
+    }
+
+    let html = '';
+    filtered.forEach(g => {
+      const p = g.person;
+      const hasMultiple = g.entries.length > 1;
+      const onsite = g.onsite;
+
+      // Primary row — always shows the latest visit's in/out times
+      const latest = g.latest;
+      html += `<tr class="person-primary${hasMultiple ? ' has-visits' : ''}${!onsite ? ' offsite-row' : ''}" id="row-${latest.id}">
+        <td><span class="status-dot ${onsite ? 'dot-in' : 'dot-out'}"></span>${onsite ? 'On Site' : 'Off Site'}</td>
+        <td class="edit-cell edit-name" data-field="name" style="font-size:0.95rem;font-weight:600">${esc(p.name)}</td>
+        <td style="white-space:nowrap;">${inductionBadge(p.name)}</td>
+        <td class="edit-cell edit-company" data-field="company" style="color:var(--muted)">${esc(p.company||'—')}</td>
+        <td class="edit-cell edit-type" data-field="type"><span class="type-tag tag-${p.type}">${p.type}</span></td>
+        <td class="edit-cell edit-host" data-field="host" style="color:var(--muted);font-size:0.78rem">${esc(p.host||'—')}</td>
+        <td class="edit-cell edit-vehicle" data-field="vehicle">${p.vehicle ? `<span class="reg-plate">${esc(p.vehicle)}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+        <td class="edit-cell edit-in" style="font-size:0.78rem">${fmt(latest.in)}</td>
+        <td class="edit-cell edit-out" style="font-size:0.78rem">${fmt(latest.out)}</td>
+        <td>${!onsite
+          ? `<button class="sign-back-in-btn" onclick="signBackIn(${latest.id})">↩ Sign Back In</button>`
+          : `<button class="sign-out-btn" onclick="signOut(${latest.id})">Sign Out</button>`
+        }</td>
+        <td><button class="edit-row-btn" onclick="startEdit(${latest.id})">Edit</button></td>
+        <td><button class="delete-row-btn" onclick="confirmDelete(${latest.id})">Delete</button></td>
+      </tr>`;
+
+      // Previous visit sub-rows (all entries except the latest)
+      if (hasMultiple) {
+        const prev = g.entries.slice(0, -1);
+        prev.forEach((v, i) => {
+          const isLast = i === prev.length - 1;
+          html += `<tr class="visit-row${isLast ? ' visit-row-last' : ''}${!onsite ? ' offsite-visit-row' : ''}">
+            <td></td>
+            <td colspan="6" style="padding-left:20px;color:var(--muted);font-size:0.75rem">
+              <span class="visit-label">Visit ${i+1}</span>
+            </td>
+            <td style="color:var(--muted);font-size:0.75rem">${fmt(v.in)}</td>
+            <td style="color:var(--muted);font-size:0.75rem">${fmt(v.out)}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>`;
+        });
+      }
+    });
+
+    tbody.innerHTML = html;
+  }
+
+  function signBackIn(fromId) {
+    const original = log.find(e => e.id === fromId);
+    if (!original) return;
+    // Check not already on site
+    const already = todayEntries().find(e => e.name.toLowerCase() === original.name.toLowerCase() && !e.out);
+    if (already) { toast(`${original.name} is already signed in.`, true); return; }
+
+    // Find other people who arrived in the same vehicle and are currently off site
+    const companions = original.vehicle
+      ? todayEntries().filter(e => {
+          const sameVehicle = (e.vehicle || '').trim().toUpperCase() === original.vehicle.trim().toUpperCase();
+          const notSelf = e.name.toLowerCase() !== original.name.toLowerCase();
+          const notOnSite = !!e.out;
+          const latestForPerson = !todayEntries().find(e2 =>
+            e2.name.toLowerCase() === e.name.toLowerCase() && e2.in > e.in
+          );
+          return sameVehicle && notSelf && notOnSite && latestForPerson;
+        }).reduce((acc, e) => {
+          // deduplicate by name, keep latest entry
+          const existing = acc.find(a => a.name.toLowerCase() === e.name.toLowerCase());
+          if (!existing || e.in > existing.in) {
+            return [...acc.filter(a => a.name.toLowerCase() !== e.name.toLowerCase()), e];
+          }
+          return acc;
+        }, [])
+      : [];
+
+    if (companions.length > 0) {
+      // Show modal asking about companions
+      const names = companions.map(e => e.name);
+      document.getElementById('sbiModal_primaryId').value = fromId;
+      document.getElementById('sbiModal_companionIds').value = companions.map(e => e.id).join(',');
+      document.getElementById('sbiModal_primaryName').textContent = original.name;
+      document.getElementById('sbiModal_companionList').textContent = names.join(', ');
+      document.getElementById('sbiOverlay').classList.add('show');
+    } else {
+      doSignBackIn([fromId]);
+    }
+  }
+
+  function doSignBackIn(ids) {
+    const now = Date.now();
+    const names = [];
+    ids.forEach((id, i) => {
+      const original = log.find(e => e.id === id);
+      if (!original) return;
+      log.push({
+        id: now + i,
+        date: todayKey(),
+        name: original.name,
+        company: original.company,
+        type: original.type,
+        host: original.host,
+        vehicle: original.vehicle,
+        in: now,
+        out: null
+      });
+      names.push(original.name);
+    });
+    save();
+    toast(`✓ ${names.join(', ')} signed back in`);
+    render();
+  }
+
+  function sbiJustOne() {
+    const fromId = parseInt(document.getElementById('sbiModal_primaryId').value);
+    document.getElementById('sbiOverlay').classList.remove('show');
+    doSignBackIn([fromId]);
+  }
+
+  function sbiAllOccupants() {
+    const fromId = parseInt(document.getElementById('sbiModal_primaryId').value);
+    const companionIds = document.getElementById('sbiModal_companionIds').value
+      .split(',').map(Number).filter(Boolean);
+    document.getElementById('sbiOverlay').classList.remove('show');
+    doSignBackIn([fromId, ...companionIds]);
+  }
+
+  document.getElementById('sbiOverlay').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+  });
+
+  function esc(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function openFireModal() {
+    // Deduplicate: get the latest on-site entry per person
+    const onsiteMap = {};
+    todayEntries().filter(e => !e.out).forEach(e => {
+      const key = e.name.toLowerCase();
+      if (!onsiteMap[key] || e.in > onsiteMap[key].in) onsiteMap[key] = e;
+    });
+    const onsite = Object.values(onsiteMap);
+    const list = document.getElementById('fireList');
+    if (!onsite.length) {
+      list.innerHTML = '<li style="color:var(--muted);font-size:0.85rem">No one is currently signed in.</li>';
+    } else {
+      list.innerHTML = onsite.map(e => `
+        <li>
+          <div>
+            <div class="name">${esc(e.name)}</div>
+            <div class="company">${esc(e.type)} ${e.company ? '· '+esc(e.company) : ''}</div>
+          </div>
+          <button class="accounted ${fireAccounted[e.id] === true ? 'yes' : fireAccounted[e.id] === false ? 'no' : ''}"
+            onclick="toggleAccounted(${e.id}, this)">
+            ${fireAccounted[e.id] === true ? '✓ Accounted' : fireAccounted[e.id] === false ? '✗ Missing' : 'Mark'}
+          </button>
+        </li>
+      `).join('');
+    }
+    updateFireSummary(onsite);
+    document.getElementById('fireOverlay').classList.add('show');
+  }
+
+  function toggleAccounted(id, btn) {
+    if (fireAccounted[id] === true) {
+      fireAccounted[id] = false;
+      btn.className = 'accounted no';
+      btn.textContent = '✗ Missing';
+    } else {
+      fireAccounted[id] = true;
+      btn.className = 'accounted yes';
+      btn.textContent = '✓ Accounted';
+    }
+    const onsite = todayEntries().filter(e => !e.out);
+    updateFireSummary(onsite);
+  }
+
+  function updateFireSummary(onsite) {
+    const acc = onsite.filter(e => fireAccounted[e.id] === true).length;
+    const missing = onsite.filter(e => fireAccounted[e.id] === false).length;
+    const unmarked = onsite.length - acc - missing;
+    document.getElementById('fireSummary').innerHTML =
+      `<strong style="color:var(--accent)">${onsite.length} on site</strong> &nbsp;·&nbsp; ` +
+      `<span style="color:var(--green)">✓ ${acc} accounted</span> &nbsp;·&nbsp; ` +
+      `<span style="color:var(--red)">✗ ${missing} missing</span> &nbsp;·&nbsp; ` +
+      `<span style="color:var(--muted)">${unmarked} unmarked</span>`;
+  }
+
+  function closeFireModal() {
+    document.getElementById('fireOverlay').classList.remove('show');
+  }
+
+  function exportCSV() {
+    const entries = todayEntries();
+    if (!entries.length) { toast('No entries to export.', true); return; }
+
+    const wb = XLSX.utils.book_new();
+    const wsData = [];
+
+    // Row 1: Title
+    wsData.push(['CONTRACTORS & VISITORS ON/OFF SITE']);
+    // Row 2: Date
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'numeric'});
+    wsData.push([dateStr]);
+    // Row 3: Headers — Name(A), Company(B), Time in(C), [D,E blank], Time out(F), [G,H blank], Reg No(I)
+    wsData.push(['Name', 'Company', 'Time in', '', '', 'Time out', '', '', 'Reg No']);
+
+    // Group entries by person — first visit gets full details, repeat visits just get new times
+    const groupMap = {};
+    const groupOrder = [];
+    entries.forEach(e => {
+      const key = e.name.toLowerCase() + '|' + (e.company || '').toLowerCase();
+      if (!groupMap[key]) {
+        groupMap[key] = { first: e, visits: [] };
+        groupOrder.push(key);
+      } else {
+        groupMap[key].visits.push(e);
+      }
+    });
+
+    const fmtT = ts => ts ? new Date(ts).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) : '';
+
+    groupOrder.forEach(key => {
+      const { first, visits } = groupMap[key];
+      // First visit row — full details
+      wsData.push([
+        first.name,
+        first.company || '',
+        fmtT(first.in),
+        '', '',
+        first.out ? fmtT(first.out) : 'Still on site',
+        '', '',
+        first.vehicle || ''
+      ]);
+      // Repeat visits — name & company left blank, just new times
+      visits.forEach(v => {
+        wsData.push([
+          '', '',
+          fmtT(v.in),
+          '', '',
+          v.out ? fmtT(v.out) : 'Still on site',
+          '', '', ''
+        ]);
+      });
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Column widths to match template
+    ws['!cols'] = [
+      { wch: 20 }, // A - Name
+      { wch: 20 }, // B - Company
+      { wch: 10 }, // C - Time in
+      { wch: 4  }, // D
+      { wch: 4  }, // E
+      { wch: 10 }, // F - Time out
+      { wch: 4  }, // G
+      { wch: 4  }, // H
+      { wch: 12 }, // I - Reg No
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    XLSX.writeFile(wb, `site-register-${todayKey()}.xlsx`);
+  }
+
+  function printRegister() {
+    // Deduplicate: get the latest on-site entry per person
+    const onsiteMap = {};
+    todayEntries().filter(e => !e.out).forEach(e => {
+      const key = e.name.toLowerCase();
+      if (!onsiteMap[key] || e.in > onsiteMap[key].in) onsiteMap[key] = e;
+    });
+    const onsite = Object.values(onsiteMap).sort((a, b) => a.in - b.in);
+
+    if (!onsite.length) { toast('No one is currently on site.', true); return; }
+
+    const dateStr = new Date().toLocaleDateString('en-GB', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+    const timeStr = new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+
+    const rows = onsite.map(e => `
+      <tr>
+        <td>${esc(e.name)}</td>
+        <td>${esc(e.company||'—')}</td>
+        <td class="type-${e.type}">${e.type.charAt(0).toUpperCase()+e.type.slice(1)}</td>
+        <td>${esc(e.host||'—')}</td>
+        <td>${esc(e.vehicle||'—')}</td>
+        <td>${fmt(e.in)}</td>
+      </tr>
+    `).join('');
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>On-Site Register — ${dateStr}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; font-size: 14px; color: #27500A; background: #fff; padding: 32px; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #27500A; padding-bottom: 16px; margin-bottom: 24px; }
+  h1 { font-family: 'DM Sans', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: 0.04em; color: #27500A; }
+  h1 span { color: #97C459; }
+  .meta { text-align: right; color: #5F5E5A; font-size: 13px; line-height: 1.8; }
+  .meta strong { font-size: 15px; color: #27500A; }
+  .onsite-banner { display: inline-block; background: #EAF3DE; border: 1px solid #C0DD97; border-radius: 6px; padding: 8px 18px; margin-bottom: 20px; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #3B6D11; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: #27500A; color: #fff; padding: 11px 12px; text-align: left; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+  tbody tr:nth-child(even) { background: #F8FAF4; }
+  tbody td { padding: 11px 12px; border-bottom: 1px solid #C0DD97; vertical-align: middle; }
+  .type-contractor { color: #3B6D11; font-weight: 600; }
+  .type-visitor { color: #27500A; font-weight: 500; }
+  .type-staff { color: #639922; font-weight: 600; }
+  .type-delivery { color: #4a7a10; font-weight: 500; }
+  footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid #C0DD97; color: #97C459; font-size: 12px; display: flex; justify-content: space-between; }
+  @media print { body { padding: 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>SITE <span>REGISTER</span></h1>
+    <div style="color:#888;font-size:10px;margin-top:4px;letter-spacing:0.06em">CURRENT ON-SITE PERSONNEL</div>
+  </div>
+  <div class="meta">
+    <strong>${dateStr}</strong><br>
+    Printed: ${timeStr}<br>
+    People on site: ${onsite.length}
+  </div>
+</header>
+<div class="onsite-banner">✓ ${onsite.length} ${onsite.length === 1 ? 'person' : 'people'} currently on site</div>
+<table>
+  <thead><tr>
+    <th>Name</th><th>Company</th><th>Type</th><th>Host / Purpose</th><th>Vehicle Reg</th><th>Signed In</th>
+  </tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+<footer>
+  <span>On-Site Register — ${dateStr}</span>
+  <span>Printed at ${timeStr} · Generated ${new Date().toLocaleString('en-GB')}</span>
+</footer>
+
+<!-- ── Induction Data Panel ─────────────────────────────── -->
+<div id="inductionOverlay" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:999;overflow-y:auto;font-family:'DM Sans',sans-serif;">
+  <div style="max-width:700px;margin:0 auto;padding:32px 24px 60px;">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+      <div>
+        <h2 style="font-size:1.3rem;font-weight:700;color:var(--dark);">📋 Induction Data</h2>
+        <p style="color:var(--muted);font-size:0.82rem;margin-top:4px;">Drop a new induction spreadsheet here to update expiry dates across the register.</p>
+      </div>
+      <button onclick="closeInductionPage()" style="background:var(--pale2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:0.8rem;padding:8px 18px;cursor:pointer;font-family:'DM Sans',sans-serif;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">← Back to Register</button>
+    </div>
+
+    <!-- Drop zone -->
+    <div id="inductionDropZone" style="border:2px dashed var(--border);border-radius:12px;background:var(--pale);padding:48px 24px;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;margin-bottom:28px;"
+      ondragover="inductionDragOver(event)"
+      ondragleave="inductionDragLeave(event)"
+      ondrop="inductionDrop(event)"
+      onclick="document.getElementById('inductionFileInput').click()">
+      <div style="font-size:2.5rem;margin-bottom:12px;">📂</div>
+      <p style="font-weight:600;color:var(--dark);margin-bottom:6px;">Drag &amp; drop your induction spreadsheet here</p>
+      <p style="color:var(--muted);font-size:0.82rem;">or click to browse &nbsp;·&nbsp; Accepts .xlsx files</p>
+      <input type="file" id="inductionFileInput" accept=".xlsx" style="display:none" onchange="inductionFileSelected(event)">
+    </div>
+
+    <!-- Status / feedback -->
+    <div id="inductionStatus" style="display:none;border-radius:8px;padding:16px 20px;margin-bottom:24px;font-size:0.88rem;"></div>
+
+    <!-- Current data summary -->
+    <div id="inductionSummary" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px;">
+      <h3 style="font-size:0.9rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;">Current Induction Data</h3>
+      <div id="inductionSummaryContent"></div>
+    </div>
+  </div>
+</div>
+<!-- ── End Induction Data Panel ───────────────────────────── -->
+
+</body>
+</html>`;
+
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); }, 600);
+  }
+
+  function savePDF() {
+    const entries = todayEntries();
+    if (!entries.length) { toast('No entries to export.', true); return; }
+
+    const dateStr = new Date().toLocaleDateString('en-GB', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+    // Group by person (same logic as renderTable)
+    const groups = [];
+    const groupMap = {};
+    entries.forEach(e => {
+      const key = e.name.toLowerCase() + '|' + (e.company||'').toLowerCase();
+      if (!groupMap[key]) { groupMap[key] = { entries: [] }; groups.push(groupMap[key]); }
+      groupMap[key].entries.push(e);
+    });
+    groups.forEach(g => {
+      g.entries.sort((a,b) => a.in - b.in);
+      g.person = g.entries[g.entries.length - 1];
+      g.onsite = !g.person.out;
+    });
+    groups.sort((a,b) => {
+      if (a.onsite !== b.onsite) return a.onsite ? -1 : 1;
+      return b.entries[0].in - a.entries[0].in;
+    });
+
+    const uniquePeople = groups.length;
+    const totalVisits  = entries.length;
+    const onsiteCount  = groups.filter(g => g.onsite).length;
+    const signedOutCount = entries.filter(e => e.out).length;
+
+    let rows = '';
+    groups.forEach(g => {
+      const p = g.person;
+      const latest = g.entries[g.entries.length - 1];
+      const hasMultiple = g.entries.length > 1;
+      const statusColour = g.onsite ? '#639922' : '#5F5E5A';
+      const statusText   = g.onsite ? '● On Site' : '○ Off Site';
+
+      // Primary row - show first visit times
+      const firstVisit = g.entries[0];
+      const primaryBorder = hasMultiple ? '' : 'border-bottom:1px solid #C0DD97;';
+      rows += `<tr class="primary-row">
+        <td style="color:${statusColour};font-size:9px;white-space:nowrap;${primaryBorder}">${statusText}</td>
+        <td style="font-weight:600;${primaryBorder}">${esc(p.name)}</td>
+        <td style="${primaryBorder}">${esc(p.company||'—')}</td>
+        <td class="type-${p.type}" style="${primaryBorder}">${p.type.charAt(0).toUpperCase()+p.type.slice(1)}</td>
+        <td style="${primaryBorder}">${esc(p.host||'—')}</td>
+        <td style="${primaryBorder}">${esc(p.vehicle||'—')}</td>
+        <td style="${primaryBorder}">${fmt(firstVisit.in)}</td>
+        <td style="${primaryBorder}">${firstVisit.out ? fmt(firstVisit.out) : '<span style="color:#c0392b;font-weight:600">Still on site</span>'}</td>
+      </tr>`;
+
+      // Visit sub-rows for visits 2 onwards
+      if (hasMultiple) {
+        const extra = g.entries.slice(1);
+        extra.forEach((v, i) => {
+          const isLast = i === extra.length - 1;
+          rows += `<tr class="visit-row${isLast ? ' visit-row-last' : ''}">
+            <td></td>
+            <td colspan="5" style="padding-left:16px;color:#5F5E5A;font-size:9px">
+              <span style="text-transform:uppercase;letter-spacing:0.08em;opacity:0.7">Visit ${i+2}</span>
+            </td>
+            <td>${fmt(v.in)}</td>
+            <td>${v.out ? fmt(v.out) : '<span style="color:#c0392b;font-weight:600">Still on site</span>'}</td>
+          </tr>`;
+        });
+      }
+    });
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Site Register — ${dateStr}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; font-size: 11px; color: #27500A; background: #fff; padding: 32px; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #27500A; padding-bottom: 16px; margin-bottom: 24px; }
+  h1 { font-family: 'DM Sans', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 0.04em; color: #27500A; }
+  h1 span { color: #97C459; }
+  .meta { text-align: right; color: #5F5E5A; font-size: 10px; line-height: 1.8; }
+  .meta strong { font-size: 12px; color: #27500A; }
+  .summary { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat { border: 1px solid #C0DD97; border-radius: 6px; padding: 10px 18px; text-align: center; background: #F8FAF4; }
+  .stat .num { font-family: 'DM Sans', sans-serif; font-size: 20px; font-weight: 700; color: #639922; }
+  .stat .lbl { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: #5F5E5A; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: #27500A; color: #fff; padding: 9px 10px; text-align: left; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; }
+  tr.primary-row td { padding: 9px 10px; border-bottom: none; vertical-align: middle; }
+  tr.primary-row:nth-child(even) td { background: #F8FAF4; }
+  tr.visit-row td { padding: 3px 10px 5px; border-bottom: none; vertical-align: middle; font-size: 10px; }
+  tr.visit-row-last td { padding-bottom: 9px; border-bottom: 1px solid #C0DD97; }
+  tr.primary-row + tr:not(.visit-row) td, tr.primary-row:first-child td { border-top: none; }
+  .type-contractor { color: #3B6D11; font-weight: 600; }
+  .type-visitor { color: #27500A; font-weight: 500; }
+  .type-staff { color: #639922; font-weight: 600; }
+  .type-delivery { color: #4a7a10; font-weight: 500; }
+  footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid #C0DD97; color: #97C459; font-size: 9px; display: flex; justify-content: space-between; }
+  @media print { body { padding: 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>SITE <span>REGISTER</span></h1>
+    <div style="color:#888;font-size:10px;margin-top:4px;letter-spacing:0.06em">DAILY VISITOR &amp; CONTRACTOR LOG — END OF DAY REPORT</div>
+  </div>
+  <div class="meta">
+    <strong>${dateStr}</strong><br>
+    Printed: ${new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})}<br>
+    People: ${uniquePeople} &nbsp;·&nbsp; Still on site: ${onsiteCount}
+  </div>
+</header>
+<div class="summary">
+  <div class="stat"><div class="num">${uniquePeople}</div><div class="lbl">People</div></div>
+  <div class="stat"><div class="num">${totalVisits}</div><div class="lbl">Total Visits</div></div>
+  <div class="stat" style="border-color:#c0392b"><div class="num" style="color:#c0392b">${onsiteCount}</div><div class="lbl">Still On Site</div></div>
+  <div class="stat" style="border-color:#639922"><div class="num" style="color:#639922">${signedOutCount}</div><div class="lbl">Signed Out</div></div>
+  <div class="stat"><div class="num">${entries.filter(e=>e.type==='contractor').length}</div><div class="lbl">Contractors</div></div>
+  <div class="stat"><div class="num">${entries.filter(e=>e.type==='visitor').length}</div><div class="lbl">Visitors</div></div>
+</div>
+<table>
+  <thead><tr>
+    <th>Status</th><th>Name</th><th>Company</th><th>Type</th><th>Host / Purpose</th><th>Vehicle Reg</th><th>Signed In</th><th>Signed Out</th>
+  </tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+<footer>
+  <span>Site Register — ${dateStr}</span>
+  <span>Generated ${new Date().toLocaleString('en-GB')}</span>
+</footer>
+</body>
+</html>`;
+
+    // Download directly as a file
+    const blob = new Blob([html], { type: 'text/html' });
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = `LRL-Site-Register-${todayKey()}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // Also open the report in a new tab so it can be viewed and saved from the browser
+    setTimeout(() => {
+      window.open(blobUrl, '_blank');
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+    }, 300);
+
+    // Build plain-text email body with a clean, readable layout
+    const line  = '=' .repeat(72);
+    const dash  = '-' .repeat(72);
+    const col   = (str, w) => String(str || '—').padEnd(w).slice(0, w);
+    const timeNow = new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+
+    let emailBody = '';
+
+    // ── Header ──────────────────────────────────────────────────────
+    emailBody += `LRL CONTRACTORS & VISITORS REGISTER\n`;
+    emailBody += `End of Day Report\n`;
+    emailBody += `${line}\n`;
+    emailBody += `Date      : ${dateStr}\n`;
+    emailBody += `Generated : ${timeNow}\n`;
+    emailBody += `${line}\n\n`;
+
+    // ── Summary block ────────────────────────────────────────────────
+    emailBody += `DAILY SUMMARY\n`;
+    emailBody += `${dash}\n`;
+    emailBody += `  Total people on site today  :  ${uniquePeople}\n`;
+    emailBody += `  Total site visits           :  ${totalVisits}\n`;
+    emailBody += `  Still on site (not signed out) :  ${onsiteCount}\n`;
+    emailBody += `  Signed out                  :  ${signedOutCount}\n`;
+    emailBody += `  Contractors                 :  ${entries.filter(e=>e.type==='contractor').length}\n`;
+    emailBody += `  Visitors                    :  ${entries.filter(e=>e.type==='visitor').length}\n`;
+    emailBody += `${dash}\n\n`;
+
+    // ── People still on site ─────────────────────────────────────────
+    const stillOnSite = groups.filter(g => g.onsite);
+    if (stillOnSite.length > 0) {
+      emailBody += `** ${stillOnSite.length} PERSON${stillOnSite.length > 1 ? 'S' : ''} STILL ON SITE AT END OF DAY **\n`;
+      stillOnSite.forEach(g => {
+        emailBody += `   • ${g.person.name}${g.person.company ? ' (' + g.person.company + ')' : ''}\n`;
+      });
+      emailBody += `\n`;
+    }
+
+    // ── Full register — one card per person ─────────────────────────
+    emailBody += `FULL REGISTER\n`;
+    emailBody += `${dash}\n\n`;
+
+    const ordinal = n => { const s=['th','st','nd','rd'], v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); };
+
+    groups.forEach((g) => {
+      const p = g.person;
+      const typLabel = p.type.charAt(0).toUpperCase() + p.type.slice(1);
+
+      emailBody += `Name       : ${p.name}${g.onsite ? '  [STILL ON SITE]' : ''}\n`;
+      emailBody += `${typLabel.padEnd(11)}: ${p.company || '—'}\n`;
+      emailBody += `Vehicle    : ${p.vehicle || '—'}\n`;
+
+      const v1 = g.entries[0];
+      emailBody += `Time in    : ${fmt(v1.in)}\n`;
+      emailBody += `Time out   : ${v1.out ? fmt(v1.out) : '—'}\n`;
+
+      if (g.entries.length > 1) {
+        g.entries.slice(1).forEach((v, i) => {
+          emailBody += `\n`;
+          emailBody += `${ordinal(i + 2)} visit\n`;
+          emailBody += `Time in    : ${fmt(v.in)}\n`;
+          emailBody += `Time out   : ${v.out ? fmt(v.out) : '—'}\n`;
+        });
+      }
+
+      emailBody += `\n${dash}\n\n`;
+    });
+
+    emailBody += `${line}\n`;
+    emailBody += `The full register has also been saved as LRL-Site-Register-${todayKey()}.html\n`;
+    emailBody += `Please attach it to this email if required.\n`;
+    emailBody += `${line}\n`;
+
+    const subject = encodeURIComponent(`LRL Site Register — ${dateStr}`);
+    const body    = encodeURIComponent(emailBody);
+    const mailto  = `mailto:sean.morris@lancashirerenewables.co.uk?subject=${subject}&body=${body}`;
+
+    // Small delay so the file download starts first
+    setTimeout(() => { window.location.href = mailto; }, 400);
+
+    toast('✓ Register saved & email draft opened in Outlook.');
+  }
+
+  function openClearModal() {
+    document.getElementById('clearOverlay').classList.add('show');
+  }
+
+  function closeClearModal() {
+    document.getElementById('clearOverlay').classList.remove('show');
+  }
+
+  function confirmClear() {
+    const today = todayKey();
+    log = log.filter(e => e.date !== today);
+    save();
+    closeClearModal();
+    toast('Register cleared.');
+    render();
+  }
+
+  // Close clear overlay on backdrop click
+  document.getElementById('clearOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeClearModal();
+  });
+
+  // Close overlay on backdrop click
+  document.getElementById('fireOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeFireModal();
+  });
+
+  document.getElementById('deleteOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+  });
+
+  document.getElementById('clearMemoryOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeClearMemoryModal();
+  });
+
+  function openClearMemoryModal() {
+    document.getElementById('clearMemoryOverlay').classList.add('show');
+  }
+
+  function closeClearMemoryModal() {
+    document.getElementById('clearMemoryOverlay').classList.remove('show');
+  }
+
+  function confirmClearMemory() {
+    log = [];
+    acMemory = {};
+    save();
+    closeClearMemoryModal();
+    toast('All data wiped.');
+    render();
+  }
+
+  render();
+
+  function startEdit(id) {
+    const entry = log.find(e => e.id === id);
+    if (!entry) return;
+
+    const row = document.getElementById(`row-${id}`);
+    if (!row) return;
+
+    row.classList.add('editing-row');
+
+    // Name
+    row.querySelector('.edit-name').innerHTML = `<input class="inline-edit-input" id="ei-name-${id}" value="${esc(entry.name)}" autocomplete="off">`;
+
+    // Company
+    row.querySelector('.edit-company').innerHTML = `<input class="inline-edit-input" id="ei-company-${id}" value="${esc(entry.company||'')}" placeholder="—" autocomplete="off">`;
+
+    // Type
+    row.querySelector('.edit-type').innerHTML = `<select class="inline-edit-select" id="ei-type-${id}">
+      <option value="contractor"${entry.type==='contractor'?' selected':''}>contractor</option>
+      <option value="visitor"${entry.type==='visitor'?' selected':''}>visitor</option>
+    </select>`;
+
+    // Host
+    row.querySelector('.edit-host').innerHTML = `<input class="inline-edit-input" id="ei-host-${id}" value="${esc(entry.host||'')}" placeholder="—" autocomplete="off">`;
+
+    // Vehicle
+    row.querySelector('.edit-vehicle').innerHTML = `<input class="inline-edit-input" id="ei-vehicle-${id}" value="${esc(entry.vehicle||'')}" placeholder="—" autocomplete="off" style="text-transform:uppercase">`;
+
+    // In time
+    const inVal = entry.in ? new Date(entry.in).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) : '';
+    row.querySelector('.edit-in').innerHTML = `<input class="inline-edit-input" id="ei-in-${id}" value="${inVal}" placeholder="HH:MM" style="width:70px" maxlength="5">`;
+
+    // Out time
+    const outVal = entry.out ? new Date(entry.out).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) : '';
+    row.querySelector('.edit-out').innerHTML = `<input class="inline-edit-input" id="ei-out-${id}" value="${outVal}" placeholder="HH:MM" style="width:70px" maxlength="5">`;
+
+    // Swap Edit → Save, disable Delete
+    const cells = row.querySelectorAll('td');
+    const editCell = cells[cells.length - 2];
+    const deleteCell = cells[cells.length - 1];
+    editCell.innerHTML = `<button class="save-row-btn" onclick="saveEdit(${id})">Save</button>`;
+    deleteCell.innerHTML = `<button class="delete-row-btn" style="opacity:0.3;cursor:not-allowed" disabled>Delete</button>`;
+
+    document.getElementById(`ei-name-${id}`).focus();
+  }
+
+  function saveEdit(id) {
+    const entry = log.find(e => e.id === id);
+    if (!entry) return;
+
+    const name = (document.getElementById(`ei-name-${id}`)?.value || '').trim();
+    if (!name) { toast('Name cannot be empty.', true); return; }
+
+    const company = (document.getElementById(`ei-company-${id}`)?.value || '').trim();
+    const type    = document.getElementById(`ei-type-${id}`)?.value || entry.type;
+    const host    = (document.getElementById(`ei-host-${id}`)?.value || '').trim();
+    const vehicle = (document.getElementById(`ei-vehicle-${id}`)?.value || '').trim().toUpperCase();
+
+    // Parse In time
+    const inRaw = (document.getElementById(`ei-in-${id}`)?.value || '').trim();
+    if (inRaw) {
+      const inTs = parseTimeInput(inRaw, entry.in);
+      if (inTs === null) { toast('Invalid sign-in time. Use HH:MM format.', true); return; }
+      entry.in = inTs;
+    }
+
+    // Parse Out time
+    const outRaw = (document.getElementById(`ei-out-${id}`)?.value || '').trim();
+    if (outRaw) {
+      const outTs = parseTimeInput(outRaw, entry.out || entry.in);
+      if (outTs === null) { toast('Invalid sign-out time. Use HH:MM format.', true); return; }
+      entry.out = outTs;
+    } else {
+      entry.out = null; // cleared = still on site
+    }
+
+    entry.name    = name;
+    entry.company = company;
+    entry.type    = type;
+    entry.host    = host;
+    entry.vehicle = vehicle;
+
+    updateAcMemory([entry]);
+    save();
+    toast('✓ Entry updated');
+    render();
+  }
+
+  // Parse "HH:MM" into a timestamp, keeping the same date as the reference timestamp
+  function parseTimeInput(str, refTs) {
+    const match = str.match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return null;
+    const h = parseInt(match[1], 10), m = parseInt(match[2], 10);
+    if (h > 23 || m > 59) return null;
+    const base = refTs ? new Date(refTs) : new Date();
+    base.setHours(h, m, 0, 0);
+    return base.getTime();
+  }
+
+  let pendingDeleteId = null;
+
+  function confirmDelete(id) {
+    pendingDeleteId = id;
+    const entry = log.find(e => e.id === id);
+    const nameStr = entry ? esc(entry.name) : 'this entry';
+    document.getElementById('deleteModalName').textContent = nameStr;
+    document.getElementById('deleteOverlay').classList.add('show');
+  }
+
+  function closeDeleteModal() {
+    pendingDeleteId = null;
+    document.getElementById('deleteOverlay').classList.remove('show');
+  }
+
+  function doDelete() {
+    if (pendingDeleteId === null) return;
+    const entry = log.find(e => e.id === pendingDeleteId);
+    const name = entry ? entry.name : 'Entry';
+    log = log.filter(e => e.id !== pendingDeleteId);
+    save();
+    closeDeleteModal();
+    toast(`✓ ${name} deleted`);
+    render();
+  }
+
+  function clearSignIn() {
+    document.getElementById('nameIn').value    = '';
+    document.getElementById('companyIn').value = '';
+    document.getElementById('vehicleIn').value = '';
+    document.getElementById('hostIn').value    = '';
+    document.getElementById('typeIn').value    = 'contractor';
+    // Clear any passenger rows
+    document.getElementById('passengerList').innerHTML = '';
+    passengerCount = 0;
+    // Close any open dropdowns
+    acClose('nameIn');
+    acClose('vehicleIn');
+  }
+
+  // ── Autocomplete ──────────────────────────────────────────────
+  // Build a deduplicated list of known people from acMemory (persists across register clears)
+  function knownPeople() {
+    // Start from persistent acMemory, then overlay any updates from current log
+    // Only overlay log entries for people already in acMemory — never resurrect deleted people
+    const map = Object.assign({}, acMemory);
+    log.forEach(e => {
+      if (!e.name) return;
+      const key = e.name.toLowerCase();
+      if (!map[key]) return; // person was deleted from acMemory — don't re-add them
+      if (e.company) map[key].company = e.company;
+      if (e.vehicle) map[key].vehicle = e.vehicle;
+      if (e.host)    map[key].host    = e.host;
+      map[key].type = e.type;
+    });
+    return Object.values(map).sort((a,b) => a.name.localeCompare(b.name));
+  }
+
+  let acIndex = {}; // tracks keyboard-highlighted index per input id
+
+  // Returns the company associated with a given vehicle reg (checks acMemory + log)
+  function getCompanyFromVehicle(reg) {
+    if (!reg) return null;
+    const normReg = reg.trim().toUpperCase();
+    // Check acMemory first
+    for (const p of Object.values(acMemory)) {
+      const vlist = Array.isArray(p.vehicles) ? p.vehicles : (p.vehicle ? [p.vehicle.trim().toUpperCase()] : []);
+      if (vlist.includes(normReg) && p.company) return p.company.trim().toLowerCase();
+    }
+    // Fall back to log
+    for (const e of log) {
+      if ((e.vehicle || '').trim().toUpperCase() === normReg && e.company) return e.company.trim().toLowerCase();
+    }
+    return null;
+  }
+
+  function acInput(inputId) {
+    const input = document.getElementById(inputId);
+    const drop  = document.getElementById(`ac-drop-${inputId}`);
+    if (!input || !drop) return;
+
+    const q = input.value.trim().toLowerCase();
+    const people = knownPeople();
+
+    // Determine if we should filter by the vehicle's company
+    const vehicleReg = (document.getElementById('vehicleIn') || {}).value || '';
+    const vehicleCompany = getCompanyFromVehicle(vehicleReg); // null if unknown or no vehicle entered
+
+    // For passenger inputs and nameIn: if a vehicle is entered and its company is known,
+    // filter suggestions to only people from that same company
+    let matches = q
+      ? people.filter(p => p.name.toLowerCase().startsWith(q))
+      : people;
+
+    let companyFiltered = false;
+    if (vehicleCompany) {
+      const companyMatches = matches.filter(p => p.company && p.company.trim().toLowerCase() === vehicleCompany);
+      // Only apply filter if it actually narrows things down (i.e. we found some or none)
+      companyFiltered = true;
+      matches = companyMatches;
+    }
+
+    acIndex[inputId] = -1;
+
+    // If no matches at all (and no company filter) — close dropdown
+    if (!matches.length && !companyFiltered) {
+      drop.innerHTML = '';
+      drop.classList.remove('open');
+      return;
+    }
+
+    // If company-filtered and empty — show a helpful message
+    if (companyFiltered && !matches.length) {
+      drop.innerHTML = `<div style="padding:12px 14px;font-size:0.8rem;color:var(--muted);font-style:italic;">No other known visitors from this company.</div>`;
+      drop.classList.add('open');
+      return;
+    }
+
+    // For the main name input, use the enriched reg-chip layout (mirrors vehicle tab)
+    if (inputId === 'nameIn') {
+      // Deduplicate matches by name (same person may appear once per vehicle in knownPeople)
+      const seen = {};
+      const uniqueMatches = matches.filter(p => {
+        const k = p.name.toLowerCase();
+        if (seen[k]) return false;
+        seen[k] = true;
+        return true;
+      });
+
+      // Build enriched list: each person with all their known regs
+      const enriched = uniqueMatches.map(p => {
+        const regsMap = {};
+        Object.values(acMemory).forEach(m => {
+          if (m.name && m.name.toLowerCase() === p.name.toLowerCase()) {
+            const vlist = Array.isArray(m.vehicles) ? m.vehicles : (m.vehicle ? [m.vehicle.trim().toUpperCase()] : []);
+            vlist.forEach(v => { if (v) regsMap[v] = { vehicle: v, company: m.company || p.company || '', type: m.type || p.type || 'contractor' }; });
+          }
+        });
+        log.forEach(e => {
+          if (e.name && e.name.toLowerCase() === p.name.toLowerCase() && e.vehicle) {
+            const k = e.vehicle.trim().toUpperCase();
+            if (!regsMap[k]) regsMap[k] = { vehicle: k, company: e.company || p.company || '', type: e.type || p.type || 'contractor' };
+          }
+        });
+        return { name: p.name, company: p.company || '', type: p.type || 'contractor', regs: Object.values(regsMap) };
+      });
+
+      drop._enriched_names = enriched;
+
+      drop.innerHTML = enriched.map((person, pi) => {
+        const chipsHtml = person.regs.length
+          ? `<div class="ac-names-row">${person.regs.map((r, ri) => `
+              <span class="ac-name-chip" onmousedown="acNameRegChip(event, ${pi}, ${ri})">
+                ${esc(r.vehicle)}
+              </span>`).join('')}
+             </div>`
+          : '';
+        const nameChipInfo = inductionChipStyle(person.name);
+        return `
+          <div class="ac-item-reg">
+            <div class="ac-reg-row">
+              <span class="ac-reg-plate" onmousedown="acNameOnly(event, ${pi})" style="${nameChipInfo.style}" ${nameChipInfo.title}>${esc(person.name)}${person.company ? `<span style="font-size:0.72rem;font-weight:400;color:var(--muted);margin-left:6px;">${esc(person.company)}</span>` : ''}</span>
+              ${person.regs.length > 0 ? `<span style="font-size:0.68rem;color:var(--muted);letter-spacing:0.05em;">tap reg to autofill ↓</span>` : ''}
+            </div>
+            ${chipsHtml}
+          </div>`;
+      }).join('');
+
+      drop.classList.add('open');
+      return;
+    }
+
+    // Passenger inputs — simple list
+    drop.innerHTML = matches.map((p, i) => `
+      <div class="ac-item" data-idx="${i}" onmousedown="acSelect(event,'${inputId}')">
+        <div>${esc(p.name)}</div>
+        ${p.company ? `<div class="ac-sub">${esc(p.company)}${p.vehicle ? ' · ' + esc(p.vehicle) : ''}</div>` : ''}
+      </div>
+    `).join('');
+
+    drop._matches = matches;
+    drop.classList.add('open');
+  }
+
+  // Clicked the name only — fill name + company + type, leave vehicle alone
+  function acNameOnly(e, pi) {
+    e.preventDefault();
+    const drop = document.getElementById('ac-drop-nameIn');
+    const person = drop._enriched_names && drop._enriched_names[pi];
+    if (!person) return;
+    document.getElementById('nameIn').value = person.name;
+    if (person.company) document.getElementById('companyIn').value = person.company;
+    document.getElementById('typeIn').value = person.type || 'contractor';
+    acClose('nameIn');
+  }
+
+  // Clicked a reg chip under a name — fill name + vehicle + company + type
+  function acNameRegChip(e, pi, ri) {
+    e.preventDefault();
+    const drop = document.getElementById('ac-drop-nameIn');
+    const person = drop._enriched_names && drop._enriched_names[pi];
+    if (!person) return;
+    const reg = person.regs[ri];
+    if (!reg) return;
+    document.getElementById('nameIn').value    = person.name;
+    document.getElementById('vehicleIn').value = reg.vehicle;
+    if (person.company) document.getElementById('companyIn').value = person.company;
+    document.getElementById('typeIn').value = person.type || 'contractor';
+    acClose('nameIn');
+    toast(`✓ Filled: ${person.name} · ${reg.vehicle}`);
+  }
+
+  function acSelect(e, inputId) {
+    e.preventDefault(); // prevent blur firing before mousedown
+    const item = e.currentTarget;
+    const drop  = document.getElementById(`ac-drop-${inputId}`);
+    const idx   = parseInt(item.dataset.idx, 10);
+    const p     = drop._matches[idx];
+    if (!p) return;
+
+    document.getElementById(inputId).value = p.name;
+
+    acClose(inputId);
+  }
+
+  function acKeydown(event, inputId) {
+    const drop = document.getElementById(`ac-drop-${inputId}`);
+    if (!drop || !drop.classList.contains('open')) return;
+    const items = drop.querySelectorAll('.ac-item');
+    if (!items.length) return;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      acIndex[inputId] = Math.min((acIndex[inputId] || -1) + 1, items.length - 1);
+      acHighlight(inputId, items);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      acIndex[inputId] = Math.max((acIndex[inputId] || 0) - 1, 0);
+      acHighlight(inputId, items);
+    } else if (event.key === 'Enter' && acIndex[inputId] >= 0) {
+      event.preventDefault();
+      items[acIndex[inputId]].dispatchEvent(new MouseEvent('mousedown', {bubbles:true}));
+    } else if (event.key === 'Escape') {
+      acClose(inputId);
+    }
+  }
+
+  function acHighlight(inputId, items) {
+    items.forEach((el, i) => el.classList.toggle('ac-active', i === acIndex[inputId]));
+  }
+
+  function acClose(inputId) {
+    const drop = document.getElementById(`ac-drop-${inputId}`);
+    if (drop) { drop.innerHTML = ''; drop.classList.remove('open'); drop._matches = []; }
+  }
+
+  // Close all dropdowns when clicking elsewhere (but not during shift-select)
+  document.addEventListener('click', (e) => {
+    if (_shiftSelecting) return; // keep dropdown open while shift-selecting
+    document.querySelectorAll('.ac-dropdown.open').forEach(d => {
+      d.innerHTML = ''; d.classList.remove('open');
+    });
+  });
+
+  function knownVehicles() {
+    // Build from acMemory first, then overlay log
+    // Only add log-sourced vehicles for people still in acMemory — never resurrect deleted people
+    const map = {};
+    Object.values(acMemory).forEach(p => {
+      const vlist = Array.isArray(p.vehicles) ? p.vehicles : (p.vehicle ? [p.vehicle.trim().toUpperCase()] : []);
+      vlist.forEach(v => {
+        if (!v || !p.name) return;
+        if (!map[v]) map[v] = { vehicle: v, names: new Set() };
+        map[v].names.add(p.name);
+      });
+    });
+    log.forEach(e => {
+      const v = (e.vehicle || '').trim().toUpperCase();
+      if (!v || !e.name) return;
+      const key = e.name.toLowerCase();
+      if (!acMemory[key]) return; // person was deleted — don't re-add their vehicle
+      if (!map[v]) map[v] = { vehicle: v, names: new Set() };
+      map[v].names.add(e.name);
+    });
+    return Object.values(map).sort((a,b) => a.vehicle.localeCompare(b.vehicle));
+  }
+
+  function acVehicleInput() {
+    const input = document.getElementById('vehicleIn');
+    const drop  = document.getElementById('ac-drop-vehicleIn');
+    if (!input || !drop) return;
+
+    const q = input.value.trim().toUpperCase();
+    const vehicles = knownVehicles();
+    const matches = q
+      ? vehicles.filter(v => v.vehicle.startsWith(q))
+      : vehicles;
+
+    acIndex['vehicleIn'] = -1;
+
+    if (!matches.length) {
+      drop.innerHTML = '';
+      drop.classList.remove('open');
+      return;
+    }
+
+    // Build enriched match list: for each vehicle, gather all linked people with name+company
+    // ALSO include all other people registered to the same company as the vehicle's owner
+    const enriched = matches.map(v => {
+      // Step 1: Gather people directly linked to this vehicle from acMemory + log
+      const peopleMap = {};
+      Object.values(acMemory).forEach(p => {
+        const vlist = Array.isArray(p.vehicles) ? p.vehicles : (p.vehicle ? [p.vehicle.trim().toUpperCase()] : []);
+        if (vlist.includes(v.vehicle) && p.name) {
+          peopleMap[p.name.toLowerCase()] = { name: p.name, company: p.company || '', type: p.type || 'contractor', direct: true };
+        }
+      });
+      log.forEach(e => {
+        const ev = (e.vehicle || '').trim().toUpperCase();
+        if (ev === v.vehicle && e.name) {
+          const k = e.name.toLowerCase();
+          if (!acMemory[k]) return; // person was deleted — skip
+          if (!peopleMap[k]) peopleMap[k] = { name: e.name, company: e.company || '', type: e.type || 'contractor', direct: true };
+          else {
+            if (e.company) peopleMap[k].company = e.company;
+            peopleMap[k].type = e.type || peopleMap[k].type;
+          }
+        }
+      });
+
+      // Step 2: Find the company associated with this vehicle (from direct matches above)
+      const directOwner = Object.values(peopleMap).find(p => p.company);
+      const vehicleCompany = directOwner ? directOwner.company.trim().toLowerCase() : null;
+
+      // Step 3: If we know the company, add ALL other people from that company
+      if (vehicleCompany) {
+        Object.values(acMemory).forEach(p => {
+          if (!p.name) return;
+          const k = p.name.toLowerCase();
+          if (peopleMap[k]) return; // already in list
+          if ((p.company || '').trim().toLowerCase() === vehicleCompany) {
+            peopleMap[k] = { name: p.name, company: p.company || '', type: p.type || 'contractor', direct: false };
+          }
+        });
+        // Also check log for any company-matched people not in acMemory
+        log.forEach(e => {
+          if (!e.name) return;
+          const k = e.name.toLowerCase();
+          if (!acMemory[k]) return; // person was deleted — skip
+          if (peopleMap[k]) return;
+          if ((e.company || '').trim().toLowerCase() === vehicleCompany) {
+            peopleMap[k] = { name: e.name, company: e.company || '', type: e.type || 'contractor', direct: false };
+          }
+        });
+      }
+
+      // Sort: direct vehicle owners first, then rest alphabetically
+      const sorted = Object.values(peopleMap).sort((a, b) => {
+        if (a.direct && !b.direct) return -1;
+        if (!a.direct && b.direct) return 1;
+        return a.name.localeCompare(b.name);
+      });
+
+      return { vehicle: v.vehicle, people: sorted, hasCompanyExtras: vehicleCompany && sorted.some(p => !p.direct) };
+    });
+
+    drop._enriched = enriched;
+
+    drop.innerHTML = enriched.map((v, vi) => {
+      let chipsHtml = '';
+      if (v.people.length) {
+        const directPeople  = v.people.filter(p => p.direct);
+        const extraPeople   = v.people.filter(p => !p.direct);
+        const makeChip = (p, pi) => {
+          const chipInfo = inductionChipStyle(p.name);
+          return `<span class="ac-name-chip" onmousedown="acVehicleNameChip(event, ${vi}, ${pi})" data-vi="${vi}" data-pi="${pi}" style="${chipInfo.style}" ${chipInfo.title}>
+            ${esc(p.name)}${p.company ? `<span class="chip-company">${esc(p.company)}</span>` : ''}
+          </span>`;
+        };
+        let innerHtml = `<div class="ac-names-row">${directPeople.map((p) => makeChip(p, v.people.indexOf(p))).join('')}</div>`;
+        if (extraPeople.length) {
+          innerHtml += `<div style="font-size:0.65rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-top:8px;margin-bottom:3px;padding-left:2px;">Others from same company</div>`;
+          innerHtml += `<div class="ac-names-row">${extraPeople.map((p) => makeChip(p, v.people.indexOf(p))).join('')}</div>`;
+        }
+        chipsHtml = innerHtml;
+      }
+      const multiHint = v.people.length > 1
+        ? `<span style="font-size:0.68rem;color:var(--muted);letter-spacing:0.05em;"><kbd style="font-size:0.62rem;background:var(--pale2);border:1px solid var(--border);border-radius:3px;padding:1px 5px;color:var(--muted);">shift</kbd>+click multiple names, then release shift</span>`
+        : `<span style="font-size:0.68rem;color:var(--muted);letter-spacing:0.05em;">tap name to autofill ↓</span>`;
+      return `
+        <div class="ac-item-reg">
+          <div class="ac-reg-row">
+            <span class="ac-reg-plate" onmousedown="acVehicleRegOnly(event, ${vi})">${esc(v.vehicle)}</span>
+            ${v.people.length === 0 ? '' : multiHint}
+          </div>
+          ${chipsHtml}
+        </div>`;
+    }).join('');
+
+    drop.classList.add('open');
+  }
+
+  // Shift-click multi-select state
+  let _shiftSelecting = false;       // true while Shift is held and ≥1 chip selected
+  let _shiftSelected  = [];          // [{vi, pi}] in click order
+  let _shiftVi        = null;        // which vehicle row the selection belongs to
+
+  // Clicked the reg plate only — fill vehicle, leave name/company alone
+  function acVehicleRegOnly(e, vi) {
+    e.preventDefault();
+    const drop = document.getElementById('ac-drop-vehicleIn');
+    const v = drop._enriched[vi];
+    if (!v) return;
+    document.getElementById('vehicleIn').value = v.vehicle;
+    acClose('vehicleIn');
+  }
+
+  // Clicked a name chip — handles both normal click and Shift+click multi-select
+  function acVehicleNameChip(e, vi, pi) {
+    e.preventDefault();
+    e.stopPropagation(); // always prevent document click handler from closing the dropdown
+    const drop = document.getElementById('ac-drop-vehicleIn');
+    const v = drop._enriched && drop._enriched[vi];
+    if (!v) return;
+    const p = v.people[pi];
+    if (!p) return;
+
+    // ── Shift+click: multi-select mode ──────────────────────────
+    if (e.shiftKey) {
+      // If switching to a different vehicle row, reset
+      if (_shiftVi !== null && _shiftVi !== vi) {
+        _shiftSelected = [];
+        // clear highlights on old row
+        document.querySelectorAll('#ac-drop-vehicleIn .ac-name-chip.shift-selected')
+          .forEach(el => el.classList.remove('shift-selected'));
+      }
+      _shiftVi = vi;
+      _shiftSelecting = true;
+
+      const chip = e.currentTarget;
+      const alreadyIdx = _shiftSelected.findIndex(s => s.vi === vi && s.pi === pi);
+      if (alreadyIdx !== -1) {
+        // Deselect
+        _shiftSelected.splice(alreadyIdx, 1);
+        chip.classList.remove('shift-selected');
+      } else {
+        // Select
+        _shiftSelected.push({ vi, pi });
+        chip.classList.add('shift-selected');
+      }
+      // Keep the dropdown open and refocus the vehicle input so keyup fires correctly
+      setTimeout(() => { document.getElementById('vehicleIn').focus(); }, 0);
+      return; // Don't commit yet — wait for Shift keyup
+    }
+
+    // ── Normal single click ──────────────────────────────────────
+    // Clear any lingering shift selection
+    _shiftSelected = [];
+    _shiftSelecting = false;
+    _shiftVi = null;
+    document.querySelectorAll('#ac-drop-vehicleIn .ac-name-chip.shift-selected')
+      .forEach(el => el.classList.remove('shift-selected'));
+
+    document.getElementById('vehicleIn').value = v.vehicle;
+    document.getElementById('nameIn').value    = p.name;
+    if (p.company) document.getElementById('companyIn').value = p.company;
+    document.getElementById('typeIn').value = p.type || 'contractor';
+    acClose('vehicleIn');
+    toast(`✓ Filled: ${p.name}`);
+  }
+
+  // Commit multi-select when Shift key is released
+  document.addEventListener('keyup', function(e) {
+    if (e.key !== 'Shift') return;
+    if (!_shiftSelecting || !_shiftSelected.length) {
+      _shiftSelecting = false;
+      return;
+    }
+
+    const drop = document.getElementById('ac-drop-vehicleIn');
+    if (!drop || !drop._enriched) { _shiftSelecting = false; _shiftSelected = []; return; }
+
+    const v = drop._enriched[_shiftVi];
+    if (!v) { _shiftSelecting = false; _shiftSelected = []; return; }
+
+    // Resolve selected people in click order
+    const selectedPeople = _shiftSelected.map(s => v.people[s.pi]).filter(Boolean);
+    if (!selectedPeople.length) { _shiftSelecting = false; _shiftSelected = []; return; }
+
+    // Fill vehicle
+    document.getElementById('vehicleIn').value = v.vehicle;
+
+    // First selected person → main name field
+    const first = selectedPeople[0];
+    document.getElementById('nameIn').value = first.name;
+    if (first.company) document.getElementById('companyIn').value = first.company;
+    document.getElementById('typeIn').value = first.type || 'contractor';
+
+    // Remaining selected people → passenger rows
+    // Clear existing passengers first
+    document.getElementById('passengerList').innerHTML = '';
+    document.getElementById('addPassengerBtn').textContent = '+ Add Passenger';
+
+    const rest = selectedPeople.slice(1);
+    rest.forEach(person => {
+      passengerCount++;
+      const list = document.getElementById('passengerList');
+      const row = document.createElement('div');
+      row.className = 'passenger-row';
+      row.id = `prow-${passengerCount}`;
+      const pid = `passenger-${passengerCount}`;
+      row.innerHTML = `
+        <span class="passenger-label" style="display:none"></span>
+        <div class="ac-wrap" style="flex:1;margin:0" id="ac-wrap-${pid}">
+          <input type="text" id="${pid}" placeholder="Passenger name" autocomplete="off"
+            oninput="acInput('${pid}')" onkeydown="acKeydown(event,'${pid}')" onfocus="acInput('${pid}')"
+            value="${esc(person.name)}">
+          <div class="ac-dropdown" id="ac-drop-${pid}"></div>
+        </div>
+        <button class="remove-passenger" onclick="removePassenger(${passengerCount})" title="Remove">×</button>
+      `;
+      list.appendChild(row);
+      document.getElementById('addPassengerBtn').textContent = '+ Add More Passengers';
+    });
+
+    const names = selectedPeople.map(p => p.name).join(', ');
+    toast(`✓ Filled: ${names}`);
+
+    // Reset state and close
+    _shiftSelecting = false;
+    _shiftSelected  = [];
+    _shiftVi        = null;
+    acClose('vehicleIn');
+  });
+
+  // Legacy — kept for keyboard nav compatibility
+  function acVehicleSelect(e) {
+    e.preventDefault();
+    const drop = document.getElementById('ac-drop-vehicleIn');
+    const idx  = parseInt(e.currentTarget.dataset.idx, 10);
+    const v    = drop._enriched && drop._enriched[idx];
+    if (!v) return;
+    document.getElementById('vehicleIn').value = v.vehicle;
+    acClose('vehicleIn');
+  }
+
+  // ── Company Autocomplete ──────────────────────────────────────
+  function acCompanyInput() {
+    const input = document.getElementById('companyIn');
+    const drop  = document.getElementById('ac-drop-companyIn');
+    if (!input || !drop) return;
+
+    const q = input.value.trim().toLowerCase();
+
+    // Collect all unique company names from acMemory only
+    // (log-only companies may belong to deleted people, so we don't include them)
+    const companySet = new Set();
+    Object.values(acMemory).forEach(p => { if (p.company && p.company.trim()) companySet.add(p.company.trim()); });
+
+    const allCompanies = Array.from(companySet).sort((a, b) => a.localeCompare(b));
+    const matches = q
+      ? allCompanies.filter(c => c.toLowerCase().includes(q))
+      : allCompanies;
+
+    acIndex['companyIn'] = -1;
+
+    if (!matches.length) {
+      drop.innerHTML = '';
+      drop.classList.remove('open');
+      return;
+    }
+
+    drop._matches = matches.map(c => ({ name: c }));
+
+    drop.innerHTML = matches.map((c, i) => `
+      <div class="ac-item" data-idx="${i}" onmousedown="acCompanySelect(event, ${i})">
+        ${esc(c)}
+      </div>
+    `).join('');
+
+    drop.classList.add('open');
+  }
+
+  function acCompanySelect(e, idx) {
+    e.preventDefault();
+    const drop = document.getElementById('ac-drop-companyIn');
+    const match = drop._matches && drop._matches[idx];
+    if (!match) return;
+    document.getElementById('companyIn').value = match.name;
+    acClose('companyIn');
+  }
+
+  // ── End Autocomplete ───────────────────────────────────────────
+
+  // ── Backend Management Page ────────────────────────────────
+
+  // Drag state
+  let _beDrag = null; // { type:'name'|'reg', personKey, reg? }
+
+  function openBackendPage() {
+    renderBackendPage();
+    document.getElementById('backendOverlay').classList.add('show');
+  }
+
+  function closeBackendPage() {
+    document.getElementById('backendOverlay').classList.remove('show');
+  }
+
+  function renderBackendPage() {
+    const content = document.getElementById('backendContent');
+    const people = Object.values(acMemory);
+    if (!people.length) {
+      content.innerHTML = `<div class="be-empty"><strong>No data stored yet.</strong>Sign people in and their details will appear here for editing.</div>`;
+      return;
+    }
+
+    // Group by company
+    const groups = {};
+    people.forEach(p => {
+      const co = (p.company || '').trim() || '(No Company)';
+      if (!groups[co]) groups[co] = [];
+      groups[co].push(p);
+    });
+
+    const sortedCompanies = Object.keys(groups).sort((a, b) => {
+      if (a === '(No Company)') return 1;
+      if (b === '(No Company)') return -1;
+      return a.localeCompare(b);
+    });
+
+    let html = `<p class="backend-intro" style="margin-bottom:18px;">
+      <strong>Drag</strong> names or plates between company boxes to merge duplicates.
+      Click ✎ on a plate to correct it. Click ✕ to delete. Once a box is empty you can remove it.
+    </p>`;
+
+    sortedCompanies.forEach(co => {
+      const persons = groups[co].sort((a, b) => a.name.localeCompare(b.name));
+      const totalRegs = persons.reduce((s, p) => s + (p.vehicles ? p.vehicles.length : 0), 0);
+      const badge = `${persons.length} name${persons.length !== 1 ? 's' : ''}, ${totalRegs} reg${totalRegs !== 1 ? 's' : ''}`;
+      const coId = 'be-co-' + co.replace(/[^a-z0-9]/gi, '_');
+      const isEmpty = persons.length === 0;
+
+      // Name chips
+      let nameChips = persons.map(p => {
+        const key = p.name.toLowerCase();
+        const chipId = 'be-name-' + key.replace(/[^a-z0-9]/g,'_');
+        return `<span class="be-name-chip"
+          draggable="true"
+          data-type="name"
+          data-key="${esc(key)}"
+          id="${chipId}"
+          ondragstart="beDragStart(event)"
+          ondragend="beDragEnd(event)"
+          title="Drag to move to another company">
+          ${esc(p.name)}
+          <span class="chip-type">${esc(p.type||'contractor')}</span>
+          <button class="be-chip-edit" onclick="beEditName('${key.replace(/'/g,"\\'")}', event)" title="Edit name">✎</button>
+          <button class="be-chip-del" onclick="beDeletePerson('${key.replace(/'/g,"\\'")}', event)" title="Delete person">✕</button>
+        </span>`;
+      }).join('');
+
+      // Reg chips (all regs for all people in this company)
+      let regChips = '';
+      persons.forEach(p => {
+        const key = p.name.toLowerCase();
+        const regs = Array.isArray(p.vehicles) ? p.vehicles : [];
+        regs.forEach(r => {
+          regChips += `<span class="be-reg-chip"
+            draggable="true"
+            data-type="reg"
+            data-key="${esc(key)}"
+            data-reg="${esc(r)}"
+            ondragstart="beDragStart(event)"
+            ondragend="beDragEnd(event)"
+            id="be-reg-${esc(key.replace(/[^a-z0-9]/g,'_'))}-${esc(r.replace(/[^a-z0-9]/g,'_'))}"
+            title="Drag to move to another company">
+            <span>
+              ${esc(r)}
+            </span>
+            <button class="be-reg-edit-btn" onclick="beEditReg('${key.replace(/'/g,"\\'")}','${r.replace(/'/g,"\\'")}',event)" title="Edit plate">✎</button>
+            <button class="be-reg-del-btn" onclick="beDeleteReg('${key.replace(/'/g,"\\'")}','${r.replace(/'/g,"\\'")}',event)" title="Delete plate">✕</button>
+          </span>`;
+        });
+      });
+
+      const deleteBtn = isEmpty
+        ? `<button class="be-delete-company-btn" onclick="beDeleteCompany('${co.replace(/'/g,"\\'")}')">✕ Remove</button>`
+        : '';
+
+      html += `
+        <div class="company-block" id="${coId}"
+          data-company="${esc(co)}"
+          ondragover="beDragOver(event)"
+          ondragleave="beDragLeave(event)"
+          ondrop="beDrop(event)">
+          <div class="company-block-header" id="${coId}-header">
+            <h3 id="${coId}-title">${esc(co)}</h3>
+            <span class="company-count-badge">${badge}</span>
+            ${co !== '(No Company)' ? `<button class="be-company-edit-btn" onclick="beEditCompany('${co.replace(/'/g,"\\'")}', '${coId}')" title="Edit company name">✎ Edit</button>` : ''}
+            ${deleteBtn}
+          </div>
+          <div class="be-items-area ${isEmpty ? 'empty-drop-zone' : ''}">
+            ${isEmpty ? '<span class="be-drop-hint">Drop items here</span>' : ''}
+            ${nameChips ? `<span class="be-section-label">Names</span>${nameChips}` : ''}
+            ${regChips ? `<span class="be-section-label" style="margin-top:10px;">Plates</span>${regChips}` : ''}
+          </div>
+        </div>`;
+    });
+
+    content.innerHTML = html;
+  }
+
+  // ── Drag & Drop ──────────────────────────────────────────────
+
+  function beDragStart(e) {
+    const el = e.currentTarget;
+    _beDrag = {
+      type: el.dataset.type,
+      key:  el.dataset.key,
+      reg:  el.dataset.reg || null
+    };
+    el.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', ''); // required for Firefox
+  }
+
+  function beDragEnd(e) {
+    e.currentTarget.classList.remove('dragging');
+    document.querySelectorAll('.company-block.drag-over').forEach(b => b.classList.remove('drag-over'));
+  }
+
+  function beDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const block = e.currentTarget.closest('.company-block');
+    if (block) block.classList.add('drag-over');
+  }
+
+  function beDragLeave(e) {
+    const block = e.currentTarget.closest('.company-block');
+    if (block && !block.contains(e.relatedTarget)) block.classList.remove('drag-over');
+  }
+
+  function beDrop(e) {
+    e.preventDefault();
+    const block = e.currentTarget.closest('.company-block');
+    if (block) block.classList.remove('drag-over');
+    if (!_beDrag) return;
+
+    const targetCompany = block ? block.dataset.company : null;
+    if (!targetCompany) return;
+
+    const { type, key, reg } = _beDrag;
+    _beDrag = null;
+
+    if (type === 'name') {
+      const p = acMemory[key];
+      if (!p) return;
+      if (p.company === targetCompany) return; // no-op
+      p.company = targetCompany;
+      // Also update any open log entries
+      log.forEach(e => { if (e.name.toLowerCase() === key) e.company = targetCompany; });
+      save();
+      toast(`✓ ${p.name} moved to ${targetCompany}`);
+      renderBackendPage();
+    } else if (type === 'reg') {
+      const p = acMemory[key];
+      if (!p) return;
+      // Find which person in target company to assign to, or create unassigned
+      // We assign to the person with the same name if they exist in target, else keep on same person but change their company too? 
+      // Simplest correct behaviour: move the plate to the same person, but update that person's company to target.
+      if (p.company === targetCompany) return;
+      // If the person already has some regs and we're just moving one plate, 
+      // detach the reg from the person and re-attach to matching person in target co, or if none, to original person but relocated.
+      // For simplicity: move entire person's company if they only have this one reg; else just reassign this reg to a "?" person in target company.
+      // Most useful: just reassign the person's company for that reg's owner.
+      p.company = targetCompany;
+      log.forEach(e => { if (e.name.toLowerCase() === key) e.company = targetCompany; });
+      save();
+      toast(`✓ ${reg} (${p.name}) moved to ${targetCompany}`);
+      renderBackendPage();
+    }
+  }
+
+  // ── Edit / Delete ────────────────────────────────────────────
+
+  function beEditReg(personKey, oldReg, e) {
+    e.stopPropagation();
+    const chipId = 'be-reg-' + personKey.replace(/[^a-z0-9]/g,'_') + '-' + oldReg.replace(/[^a-z0-9]/g,'_');
+    const chip = document.getElementById(chipId);
+    if (!chip) return;
+    // Replace chip with inline editor
+    chip.outerHTML = `
+      <span class="be-reg-chip" id="${chipId}-edit" style="background:#fff;border-color:var(--accent);">
+        <input class="be-reg-inline-input" id="be-reg-input-${chipId}"
+          value="${esc(oldReg)}"
+          onkeydown="beRegInputKey(event,'${personKey.replace(/'/g,"\\'")}','${oldReg.replace(/'/g,"\\'")}','${chipId}')"
+          onblur="beRegInputBlur(event,'${personKey.replace(/'/g,"\\'")}','${oldReg.replace(/'/g,"\\'")}','${chipId}')"
+          autofocus>
+        <button class="be-reg-edit-btn" onclick="beRegSave('${personKey.replace(/'/g,"\\'")}','${oldReg.replace(/'/g,"\\'")}','${chipId}')">✓</button>
+        <button class="be-reg-del-btn" onclick="renderBackendPage()">✕</button>
+      </span>`;
+    setTimeout(() => {
+      const inp = document.getElementById('be-reg-input-' + chipId);
+      if (inp) { inp.focus(); inp.select(); }
+    }, 20);
+  }
+
+  function beRegInputKey(e, personKey, oldReg, chipId) {
+    if (e.key === 'Enter') beRegSave(personKey, oldReg, chipId);
+    if (e.key === 'Escape') renderBackendPage();
+  }
+
+  function beRegInputBlur(e, personKey, oldReg, chipId) {
+    // Small delay to let save button click fire first
+    setTimeout(() => {
+      const el = document.getElementById(chipId + '-edit');
+      if (el) renderBackendPage(); // cancel if still in edit mode
+    }, 180);
+  }
+
+  function beRegSave(personKey, oldReg, chipId) {
+    const inp = document.getElementById('be-reg-input-' + chipId);
+    if (!inp) return;
+    const newReg = inp.value.trim().toUpperCase();
+    if (!newReg) { toast('Plate cannot be empty.', true); return; }
+    const p = acMemory[personKey];
+    if (!p) return;
+    const idx = p.vehicles.indexOf(oldReg);
+    if (idx !== -1) p.vehicles[idx] = newReg;
+    // Also update any log entries
+    log.forEach(e => { if (e.name.toLowerCase() === personKey && e.vehicle === oldReg) e.vehicle = newReg; });
+    save();
+    toast(`✓ ${oldReg} → ${newReg}`);
+    renderBackendPage();
+  }
+
+  function beDeleteReg(personKey, reg, e) {
+    e.stopPropagation();
+    const p = acMemory[personKey];
+    if (!p) return;
+    if (!confirm(`Remove plate "${reg}" from ${p.name}?\n\nThis won't affect their sign-in history.`)) return;
+    p.vehicles = (p.vehicles || []).filter(v => v !== reg);
+    save();
+    toast(`${reg} removed`);
+    renderBackendPage();
+  }
+
+  function beDeletePerson(key, e) {
+    if (e) e.stopPropagation();
+    const p = acMemory[key];
+    if (!p) return;
+    if (!confirm(`Delete "${p.name}" and all their vehicle records?\n\nThis won't remove their sign-in history.`)) return;
+    delete acMemory[key];
+    save();
+    toast(`${p.name} removed`);
+    renderBackendPage();
+  }
+
+  // ── Edit Name ────────────────────────────────────────────────
+  function beEditName(key, e) {
+    if (e) e.stopPropagation();
+    const chipId = 'be-name-' + key.replace(/[^a-z0-9]/g,'_');
+    const chip = document.getElementById(chipId);
+    if (!chip) return;
+    const p = acMemory[key];
+    if (!p) return;
+    const oldName = p.name;
+    chip.draggable = false;
+    chip.innerHTML = `
+      <input class="be-name-inline-input" id="be-name-input-${chipId}"
+        value="${esc(oldName)}"
+        onkeydown="beNameInputKey(event,'${key.replace(/'/g,"\\'")}','${chipId}')"
+        onblur="beNameInputBlur(event,'${key.replace(/'/g,"\\'")}','${chipId}')"
+        autofocus>
+      <button class="be-chip-edit" onclick="beNameSave('${key.replace(/'/g,"\\'")}','${chipId}')">✓</button>
+      <button class="be-chip-del" onclick="renderBackendPage()">✕</button>`;
+    chip.style.background = '#fff';
+    chip.style.borderColor = 'var(--accent)';
+    setTimeout(() => {
+      const inp = document.getElementById('be-name-input-' + chipId);
+      if (inp) { inp.focus(); inp.select(); }
+    }, 20);
+  }
+
+  function beNameInputKey(e, key, chipId) {
+    if (e.key === 'Enter') beNameSave(key, chipId);
+    if (e.key === 'Escape') renderBackendPage();
+  }
+
+  function beNameInputBlur(e, key, chipId) {
+    setTimeout(() => {
+      const chip = document.getElementById(chipId);
+      if (chip && chip.querySelector('.be-name-inline-input')) renderBackendPage();
+    }, 180);
+  }
+
+  function beNameSave(oldKey, chipId) {
+    const inp = document.getElementById('be-name-input-' + chipId);
+    if (!inp) return;
+    const newName = inp.value.trim();
+    if (!newName) { toast('Name cannot be empty.', true); return; }
+    const newKey = newName.toLowerCase();
+    const p = acMemory[oldKey];
+    if (!p) return;
+    if (newKey === oldKey) { renderBackendPage(); return; }
+    if (acMemory[newKey]) { toast('A person with that name already exists.', true); return; }
+    p.name = newName;
+    acMemory[newKey] = p;
+    delete acMemory[oldKey];
+    log.forEach(e => { if (e.name.toLowerCase() === oldKey) e.name = newName; });
+    save();
+    toast(`✓ Renamed to ${newName}`);
+    renderBackendPage();
+  }
+
+  // ── Edit Company Name ─────────────────────────────────────────
+  function beEditCompany(oldCo, coId) {
+    const header = document.getElementById(coId + '-header');
+    if (!header) return;
+    const title = document.getElementById(coId + '-title');
+    if (!title) return;
+    title.outerHTML = `<input class="be-company-inline-input" id="${coId}-co-input"
+      value="${esc(oldCo)}"
+      onkeydown="beCompanyInputKey(event,'${oldCo.replace(/'/g,"\\'")}','${coId}')"
+      onblur="beCompanyInputBlur(event,'${oldCo.replace(/'/g,"\\'")}','${coId}')"
+      autofocus>`;
+    const editBtn = header.querySelector('.be-company-edit-btn');
+    if (editBtn) editBtn.outerHTML = `
+      <button class="be-company-edit-btn" onclick="beCompanySave('${oldCo.replace(/'/g,"\\'")}','${coId}')" style="background:var(--accent);color:#fff;border-color:var(--accent);">✓ Save</button>
+      <button class="be-company-edit-btn" onclick="renderBackendPage()" style="background:transparent;color:var(--muted);border-color:var(--border);">✕</button>`;
+    setTimeout(() => {
+      const inp = document.getElementById(coId + '-co-input');
+      if (inp) { inp.focus(); inp.select(); }
+    }, 20);
+  }
+
+  function beCompanyInputKey(e, oldCo, coId) {
+    if (e.key === 'Enter') beCompanySave(oldCo, coId);
+    if (e.key === 'Escape') renderBackendPage();
+  }
+
+  function beCompanyInputBlur(e, oldCo, coId) {
+    setTimeout(() => {
+      const inp = document.getElementById(coId + '-co-input');
+      if (inp) renderBackendPage();
+    }, 180);
+  }
+
+  function beCompanySave(oldCo, coId) {
+    const inp = document.getElementById(coId + '-co-input');
+    if (!inp) return;
+    const newCo = inp.value.trim();
+    if (!newCo) { toast('Company name cannot be empty.', true); return; }
+    if (newCo === oldCo) { renderBackendPage(); return; }
+    Object.values(acMemory).forEach(p => {
+      if ((p.company || '').trim() === oldCo) p.company = newCo;
+    });
+    log.forEach(e => { if ((e.company || '').trim() === oldCo) e.company = newCo; });
+    save();
+    toast(`✓ Company renamed to "${newCo}"`);
+    renderBackendPage();
+  }
+
+  function beDeleteCompany(co) {
+    // Check if truly empty
+    const stillHas = Object.values(acMemory).some(p => (p.company||'').trim() === co.trim() || (!p.company && co === '(No Company)'));
+    if (stillHas) { toast('Move all names and plates out first.', true); return; }
+    toast(`"${co}" removed`);
+    renderBackendPage();
+  }
+
+  // ── End Backend Management Page ────────────────────────────
+
+  // ── Induction Data Panel ────────────────────────────────────
+
+  // Load persisted induction data from localStorage (overrides embedded data)
+  (function() {
+    const stored = localStorage.getItem('inductionData_v1');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        // Merge stored over the embedded INDUCTION_DATA
+        Object.assign(INDUCTION_DATA, parsed);
+      } catch(e) {}
+    }
+    renderInductionSummary();
+  })();
+
+  function openInductionPage() {
+    document.getElementById('inductionOverlay').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    renderInductionSummary();
+  }
+
+  function closeInductionPage() {
+    document.getElementById('inductionOverlay').style.display = 'none';
+    document.body.style.overflow = '';
+    renderTable(); // refresh badges on main table
+  }
+
+  function inductionDragOver(e) {
+    e.preventDefault();
+    const dz = document.getElementById('inductionDropZone');
+    dz.style.borderColor = 'var(--accent)';
+    dz.style.background = 'var(--pale2)';
+  }
+
+  function inductionDragLeave(e) {
+    const dz = document.getElementById('inductionDropZone');
+    dz.style.borderColor = 'var(--border)';
+    dz.style.background = 'var(--pale)';
+  }
+
+  function inductionDrop(e) {
+    e.preventDefault();
+    inductionDragLeave(e);
+    const file = e.dataTransfer.files[0];
+    if (file) processInductionFile(file);
+  }
+
+  function inductionFileSelected(e) {
+    const file = e.target.files[0];
+    if (file) processInductionFile(file);
+    e.target.value = '';
+  }
+
+  function processInductionFile(file) {
+    if (!file.name.match(/\.xlsx$/i)) {
+      showInductionStatus('Please use an .xlsx Excel file.', false);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+        const newData = {};
+        let count = 0;
+
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          if (!row[0]) continue;
+          const name = String(row[0]).trim();
+          const nameKey = name.toLowerCase().replace(/\s+/g, ' ');
+
+          // Check columns B (index 1) and C (index 2) for Exp: dates
+          for (let c = 1; c <= 2; c++) {
+            const cell = String(row[c] || '');
+            const match = cell.match(/Exp:\s*(\d{2}-\d{2}-\d{4})/);
+            if (match) {
+              const dateStr = match[1];
+              const parts = dateStr.split('-');
+              const dateObj = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+              if (!newData[nameKey]) {
+                newData[nameKey] = { dateStr, dateObj };
+              } else if (dateObj > newData[nameKey].dateObj) {
+                newData[nameKey] = { dateStr, dateObj };
+              }
+            }
+          }
+        }
+
+        // Flatten to string values only for storage
+        const flat = {};
+        for (const [k, v] of Object.entries(newData)) {
+          flat[k] = v.dateStr;
+          count++;
+        }
+
+        // Merge into INDUCTION_DATA and persist
+        Object.assign(INDUCTION_DATA, flat);
+        localStorage.setItem('inductionData_v1', JSON.stringify(INDUCTION_DATA));
+
+        showInductionStatus(`✅ Successfully loaded ${count} induction records from "${file.name}". The register has been updated.`, true);
+        renderInductionSummary();
+        renderTable();
+
+      } catch(err) {
+        showInductionStatus('❌ Could not read that file. Make sure it is a valid .xlsx spreadsheet.', false);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function showInductionStatus(msg, success) {
+    const el = document.getElementById('inductionStatus');
+    el.style.display = 'block';
+    el.style.background = success ? '#e8f5e9' : '#fdecea';
+    el.style.border = '1px solid ' + (success ? '#a5d6a7' : '#f5c6cb');
+    el.style.color = success ? '#2e7d32' : '#c0392b';
+    el.textContent = msg;
+  }
+
+  function renderInductionSummary() {
+    const el = document.getElementById('inductionSummaryContent');
+    if (!el) return;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const keys = Object.keys(INDUCTION_DATA);
+    let valid = 0, expired = 0;
+    keys.forEach(k => {
+      const parts = INDUCTION_DATA[k].split('-');
+      const d = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+      if (d >= today) valid++; else expired++;
+    });
+
+    const stored = localStorage.getItem('inductionData_v1');
+    const source = stored ? 'Last updated from uploaded spreadsheet' : 'Using embedded data (original spreadsheet)';
+    const lastUpdate = stored ? '' : '';
+
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div style="background:var(--pale2);border-radius:8px;padding:14px;text-align:center;">
+          <div style="font-size:1.6rem;font-weight:700;color:var(--dark);">${keys.length}</div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">Total Records</div>
+        </div>
+        <div style="background:#e8f5e9;border-radius:8px;padding:14px;text-align:center;">
+          <div style="font-size:1.6rem;font-weight:700;color:#2e7d32;">${valid}</div>
+          <div style="font-size:0.75rem;color:#2e7d32;margin-top:2px;">Valid</div>
+        </div>
+        <div style="background:#fdecea;border-radius:8px;padding:14px;text-align:center;">
+          <div style="font-size:1.6rem;font-weight:700;color:#c0392b;">${expired}</div>
+          <div style="font-size:0.75rem;color:#c0392b;margin-top:2px;">Expired</div>
+        </div>
+      </div>
+      <p style="font-size:0.78rem;color:var(--muted);">📌 ${source}</p>
+    `;
+  }
+
+  function clearInductionData() {
+    localStorage.removeItem('inductionData_v1');
+    // Reset INDUCTION_DATA back to the embedded copy (re-evaluate the original embedded object)
+    // We can't re-parse easily so just wipe and note it's cleared
+    for (const k in INDUCTION_DATA) delete INDUCTION_DATA[k];
+    toast('✓ Uploaded induction data cleared — reverted to embedded records.');
+    renderInductionSummary();
+    renderTable();
+  }
+
+  // ── End Induction Data Panel ────────────────────────────────
+
+  // Populate today's date in header and title
+  (function() {
+    const dateStr = new Date().toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'long', year:'numeric'});
+    const el = document.getElementById('todayDate');
+    if (el) el.textContent = dateStr;
+    document.title = 'LRL Register — ' + dateStr;
+    const rd = document.getElementById('registerDate');
+    if (rd) rd.textContent = '— ' + dateStr;
+  })();
+</script>
+</body>
+</html>
